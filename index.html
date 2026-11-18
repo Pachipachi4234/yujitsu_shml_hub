@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YuJitsu SHML Hub — 独自プラグイン共有コミュニティ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+        .plugin-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .plugin-card:hover {
+            transform: translateY(-3px);
+            border-color: #10b981;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ヘッダー -->
+    <header class="sticky top-0 z-30 bg-[#161b22]/95 backdrop-blur border-b border-[#30363d]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- 左側：ロゴ＆サブタイトル -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
+                    🔌
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">
+                            YuJitsu <span class="text-[#10b981]">SHML Hub</span>
+                        </h1>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-[#58a6ff] border border-sky-500/30">
+                            COMMUNITY
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-400">ThumbnailMaker Pro 専用 .shml プラグイン共有コミュニティ</p>
+                </div>
+            </div>
+
+            <!-- 右端：アップロードボタン -->
+            <div class="flex items-center gap-2.5 ml-auto">
+                <span id="connectionStatus" class="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-gray-400 bg-[#0d1117] px-2.5 py-1.5 rounded-lg border border-[#30363d]">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
+                    <span id="statusText">接続中...</span>
+                </span>
+                <button id="openUploadModalBtn" class="bg-[#10b981] hover:bg-emerald-400 active:scale-[0.98] text-[#0d1117] font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+                    <span>📤</span>
+                    <span>ファイルをアップロード</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+        <!-- 検索・並べ替えコントロールバー -->
+        <section class="bg-[#161b22] border border-[#30363d] rounded-2xl p-4 shadow-md">
+            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                <!-- 検索入力 -->
+                <div class="relative flex-1">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="プラグイン名・概要・作者名・タグ ([change], [javascript] など) で検索..."
+                        class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl pl-10 pr-9 py-2.5 text-sm text-white placeholder-gray-500 transition"
+                    >
+                    <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs px-1.5 py-0.5 rounded">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- 並べ替えボタン＆件数 -->
+                <div class="flex flex-wrap items-center justify-between md:justify-end gap-2">
+                    <div class="inline-flex bg-[#0d1117] p-1 rounded-xl border border-[#30363d]">
+                        <button id="sortNewestBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#10b981] text-[#0d1117] cursor-pointer">
+                            🆕 新着順
+                        </button>
+                        <button id="sortPopularBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer">
+                            🔥 人気順（DL数）
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-400 bg-[#0d1117] px-3 py-2 rounded-xl border border-[#30363d]">
+                        公開中: <span id="pluginCountLabel" class="font-bold text-[#58a6ff]">0</span> 件
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ローディング表示 -->
+        <div id="loadingState" class="py-20 text-center space-y-3">
+            <div class="inline-block w-8 h-8 border-4 border-[#30363d] border-t-[#10b981] rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-400">コミュニティのプラグインを読み込んでいます...</p>
+        </div>
+
+        <!-- 検索結果0件表示 -->
+        <div id="emptyState" class="hidden py-20 text-center bg-[#161b22] border border-[#30363d] rounded-2xl p-6 space-y-2">
+            <div class="text-4xl">🔎</div>
+            <h3 class="text-base font-bold text-white">条件に一致する .shml プラグインが見つかりませんでした</h3>
+            <p class="text-xs text-gray-400">別のキーワードで検索するか、右上のボタンから新しいプラグインを投稿してみましょう！</p>
+        </div>
+
+        <!-- プラグイン一覧グリッド -->
+        <section id="pluginGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden">
+            <!-- JSでカード生成 -->
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="border-t border-[#30363d] bg-[#161b22] py-4 px-4 text-center text-xs text-gray-500">
+        YuJitsu SHML Hub — ThumbnailMaker Pro v2.9+ 対応コミュニティ拡張ストア
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- モーダル①：プラグイン詳細＆ダウンロード -->
+    <!-- ========================================== -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- モーダルヘッダー -->
+            <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-start justify-between gap-4">
+                <div class="space-y-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="detailFileNameBadge" class="text-[11px] font-mono-code bg-emerald-500/15 text-[#10b981] border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                            plugin.shml
+                        </span>
+                        <span id="detailDownloadsBadge" class="text-[11px] font-bold bg-sky-500/15 text-[#58a6ff] border border-sky-500/30 px-2 py-0.5 rounded-md">
+                            ⬇️ 0 DL
+                        </span>
+                    </div>
+                    <h2 id="detailTitle" class="text-lg sm:text-xl font-extrabold text-white break-words">
+                        プラグインタイトル
+                    </h2>
+                    <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                        <span>👤 作者: <strong id="detailAuthor" class="text-gray-200">匿名クリエイター</strong></span>
+                        <span>🕒 投稿日: <span id="detailDate">2026/01/01</span></span>
+                    </div>
+                </div>
+                <button id="closeDetailModalBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer flex-none">
+                    ✕
+                </button>
+            </div>
+
+            <!-- モーダル本文 -->
+            <div class="p-5 overflow-y-auto space-y-5 flex-1">
+                <!-- 検出ブロックタグ -->
+                <div id="detailTagsRow" class="flex flex-wrap gap-1.5"></div>
+
+                <!-- 概要・使い方 -->
+                <div class="space-y-1.5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-[#58a6ff]">📖 概要・使い方</h3>
+                    <div id="detailDescription" class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed"></div>
+                </div>
+
+                <!-- SHMLソースコードプレビュー -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#10b981]">💻 .shml スクリプト内容プレビュー</h3>
+                        <button id="copyCodeBtn" class="text-xs bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-3 py-1 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5">
+                            <span>📋</span>
+                            <span>コードをコピー</span>
+                        </button>
+                    </div>
+                    <pre id="detailCodePreview" class="bg-[#010409] border border-[#30363d] rounded-xl p-4 text-xs font-mono-code text-emerald-300 overflow-x-auto max-h-64 leading-relaxed"></pre>
+                </div>
+            </div>
+
+            <!-- モーダルフッター（ダウンロードアクション） -->
+            <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-[11px] text-gray-400">
+                    ※ ThumbnailMaker Pro 右上の「🔌 プラグイン (.shml) 読込」から読み込んで使用します
+                </p>
+                <button id="downloadShmlBtn" class="w-full sm:w-auto bg-[#10b981] hover:bg-emerald-400 active:scale-[0.98] text-[#0d1117] font-extrabold text-sm px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                    <span>⬇️</span>
+                    <span>.shml ファイルをダウンロード</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- モーダル②：新規プラグインアップロード -->
+    <!-- ========================================== -->
+    <div id="uploadModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- ヘッダー -->
+            <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📤</span>
+                    <h2 class="text-base sm:text-lg font-extrabold text-white">新しい .shml プラグインを公開</h2>
+                </div>
+                <button id="closeUploadModalBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <!-- フォーム本体 -->
+            <form id="uploadForm" class="p-5 overflow-y-auto space-y-4 flex-1">
+                <!-- ファイルドロップ＆選択エリア -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1.5">
+                        1. プラグインファイル (.shml / .txt) <span class="text-rose-400">*</span>
+                    </label>
+                    <div id="dropZone" class="border-2 border-dashed border-[#30363d] hover:border-[#10b981] bg-[#0d1117] rounded-xl p-5 text-center transition cursor-pointer">
+                        <input type="file" id="shmlUploadInput" accept=".shml,.txt" class="hidden">
+                        <div id="dropZoneDefault" class="space-y-1">
+                            <div class="text-2xl">📄</div>
+                            <p class="text-xs sm:text-sm font-bold text-gray-200">クリックしてファイルを選択、またはここにドラッグ＆ドロップ</p>
+                            <p class="text-[11px] text-gray-500">UTF-8 形式の .shml または .txt ファイルに対応</p>
+                        </div>
+                        <div id="dropZoneSelected" class="hidden space-y-1">
+                            <div class="text-2xl">✅</div>
+                            <p id="selectedFileName" class="text-sm font-bold text-[#10b981] font-mono-code"></p>
+                            <p id="selectedFileMeta" class="text-[11px] text-gray-400"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- タイトル＆作者名 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="uploadTitle" class="block text-xs font-bold text-gray-300 mb-1">
+                            2. プラグインタイトル <span class="text-rose-400">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="uploadTitle"
+                            required
+                            maxlength="60"
+                            placeholder="例: 💬 吹き出しジェネレーター"
+                            class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
+                        >
+                    </div>
+                    <div>
+                        <label for="uploadAuthor" class="block text-xs font-bold text-gray-300 mb-1">
+                            3. 作者名（任意）
+                        </label>
+                        <input
+                            type="text"
+                            id="uploadAuthor"
+                            maxlength="30"
+                            placeholder="未入力時は「匿名クリエイター」"
+                            class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
+                        >
+                    </div>
+                </div>
+
+                <!-- 概要・使い方 -->
+                <div>
+                    <label for="uploadDescription" class="block text-xs font-bold text-gray-300 mb-1">
+                        4. 概要・使い方 <span class="text-rose-400">*</span>
+                    </label>
+                    <textarea
+                        id="uploadDescription"
+                        required
+                        rows="4"
+                        maxlength="1000"
+                        placeholder="このプラグインで追加される機能や、ThumbnailMaker上での操作手順を書いてください。"
+                        class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white leading-relaxed"
+                    ></textarea>
+                </div>
+
+                <!-- 読み込んだスクリプトのプレビュー -->
+                <div id="uploadPreviewBox" class="hidden space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-gray-400">読み込まれたコード内容（先頭プレビュー）</span>
+                        <div id="uploadDetectedTags" class="flex gap-1"></div>
+                    </div>
+                    <pre id="uploadCodePreview" class="bg-[#010409] border border-[#30363d] rounded-xl p-3 text-[11px] font-mono-code text-emerald-300 max-h-28 overflow-y-auto"></pre>
+                </div>
+            </form>
+
+            <!-- フッター -->
+            <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex items-center justify-end gap-2.5">
+                <button type="button" id="cancelUploadBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white bg-[#161b22] border border-[#30363d] cursor-pointer">
+                    キャンセル
+                </button>
+                <button type="submit" form="uploadForm" id="submitUploadBtn" class="bg-[#10b981] hover:bg-emerald-400 disabled:opacity-50 text-[#0d1117] font-extrabold text-xs sm:text-sm px-5 py-2 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                    <span>🚀</span>
+                    <span>ホームに公開する</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- カスタムトースト通知（alert()不使用） -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Firebase SDK & アプリケーションロジック -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 環境グローバル変数の取得
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'yujitsu-shml-hub';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+        // トースト通知ヘルパー
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const colors = type === 'error'
+                ? 'bg-rose-950/95 border-rose-500 text-rose-200'
+                : 'bg-[#161b22]/95 border-[#10b981] text-emerald-200';
+            toast.className = `pointer-events-auto border px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 ${colors}`;
+            toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✨'}</span><span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // SHMLスクリプト内のブロックタグ自動検出
+        function detectShmlBlocks(content) {
+            const found = new Set();
+            const regex = /^\s*\[(change|javascript|js|html|python|py|java|php)\]/gim;
+            let m;
+            while ((m = regex.exec(content)) !== null) {
+                let tag = m[1].toLowerCase();
+                if (tag === 'js') tag = 'javascript';
+                if (tag === 'py') tag = 'python';
+                found.add(`[${tag}]`);
+            }
+            return Array.from(found);
+        }
+
+        function getTagBadgeStyle(tag) {
+            switch (tag) {
+                case '[change]': return 'bg-purple-500/15 text-purple-300 border-purple-500/30';
+                case '[javascript]': return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+                case '[html]': return 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+                case '[python]': return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+                case '[java]': return 'bg-orange-500/15 text-orange-300 border-orange-500/30';
+                case '[php]': return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30';
+                default: return 'bg-gray-500/15 text-gray-300 border-gray-500/30';
+            }
+        }
+
+        // ==========================================
+        // 初期シードデータ（3つの実用 .shml プラグイン）
+        // ==========================================
+        const INITIAL_SEED_PLUGINS = [
+            {
+                title: '💬 吹き出しジェネレーター (図形変形対応)',
+                author: 'YuJitsu Official',
+                description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（上下左右・斜め・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接マウスドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
+                fileName: 'speech_bubble.shml',
+                downloads: 128,
+                createdAt: Date.now() - 1000 * 60 * 60 * 5,
+                content: `[change]
+# レイヤー追加パネルに「💬 吹き出しを追加」ボタンを追加
+(+"59")-("💬 吹き出しを追加","{button}")-{button}:<add_speech_bubble>
+_
+[html]
+("1~65"):{
+<div id="speechBubbleInspector" class="space-y-2 bg-[#161b22] p-2.5 rounded border border-emerald-500/60 mt-2 hidden">
+  <div class="flex justify-between items-center border-b border-emerald-500/30 pb-1">
+    <span class="text-[11px] font-bold text-emerald-300">💬 吹き出しプロパティ (緑●ドラッグで変形)</span>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <span class="text-[10px] text-gray-400">吹き出しタイプ</span>
+      <select id="sbStyle" class="input-ui">
+        <option value="round">角丸（定番）</option>
+        <option value="oval">楕円（まる）</option>
+        <option value="rect">四角（テロップ）</option>
+        <option value="cloud">もくもく（心の声）</option>
+        <option value="spike">ギザギザ（叫び）</option>
+      </select>
+    </div>
+    <div>
+      <span class="text-[10px] text-gray-400">しっぽの位置</span>
+      <select id="sbTail" class="input-ui">
+        <option value="bottom-left">左下</option>
+        <option value="bottom-center">下（中央）</option>
+        <option value="bottom-right">右下</option>
+        <option value="top-left">左上</option>
+        <option value="top-center">上（中央）</option>
+        <option value="top-right">右上</option>
+        <option value="left">左</option>
+        <option value="right">右</option>
+        <option value="none">しっぽ無し</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <span class="text-[10px] text-gray-400">横幅 (W) <span id="sbWVal" class="text-emerald-300 font-bold">460</span></span>
+      <input type="range" id="sbW" min="100" max="1150" value="460" class="w-full">
+    </div>
+    <div>
+      <span class="text-[10px] text-gray-400">縦幅 (H) <span id="sbHVal" class="text-emerald-300 font-bold">240</span></span>
+      <input type="range" id="sbH" min="60" max="680" value="240" class="w-full">
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <span class="text-[10px] text-gray-400">塗りつぶし色</span>
+      <input type="color" id="sbFill" value="#ffffff" class="w-full h-6 rounded cursor-pointer">
+    </div>
+    <div>
+      <span class="text-[10px] text-gray-400">枠線の色</span>
+      <input type="color" id="sbStroke" value="#000000" class="w-full h-6 rounded cursor-pointer">
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2 items-center">
+    <div>
+      <span class="text-[10px] text-gray-400">枠線の太さ <span id="sbLineVal" class="text-emerald-300 font-bold">8</span>px</span>
+      <input type="range" id="sbLine" min="0" max="24" value="8" class="w-full">
+    </div>
+    <label class="flex items-center gap-1.5 text-[11px] text-gray-200 cursor-pointer pt-3">
+      <input type="checkbox" id="sbShadow" checked class="accent-emerald-500">
+      <span>影をつける</span>
+    </label>
+  </div>
+</div>
+}
+_
+[javascript]
+:
+(() => {
+  const inspectorPanel = document.getElementById('inspectorPanel');
+  const sbInspector = document.getElementById('speechBubbleInspector');
+  if (inspectorPanel && sbInspector) inspectorPanel.appendChild(sbInspector);
+
+  function getSbHandles(bw, bh) {
+    const hw = bw / 2, hh = bh / 2;
+    return [
+      { id: 'nw', x: -hw, y: -hh }, { id: 'n', x: 0, y: -hh }, { id: 'ne', x: hw, y: -hh },
+      { id: 'e', x: hw, y: 0 }, { id: 'se', x: hw, y: hh }, { id: 's', x: 0, y: hh },
+      { id: 'sw', x: -hw, y: hh }, { id: 'w', x: -hw, y: 0 }
+    ];
+  }
+
+  function toSbLocal(layer, cx, cy) {
+    const dx = cx - layer.x, dy = cy - layer.y;
+    const rad = -((layer.rotation || 0) * Math.PI) / 180;
+    return { x: dx * Math.cos(rad) - dy * Math.sin(rad), y: dx * Math.sin(rad) + dy * Math.cos(rad) };
+  }
+
+  function drawSpeechBubbleLayer(layer) {
+    const bw = layer.bw || 460, bh = layer.bh || 240;
+    const style = layer.sbStyle || 'round', tail = layer.sbTail || 'bottom-left';
+    const fill = layer.fillColor || '#ffffff', stroke = layer.strokeColor || '#000000';
+    const lineWidth = layer.lineWidth !== undefined ? layer.lineWidth : 8;
+    const bx = -bw / 2, by = -bh / 2;
+
+    ctx.save();
+    ctx.globalAlpha = layer.opacity !== undefined ? Math.max(0, Math.min(1, layer.opacity / 100)) : 1.0;
+    ctx.translate(layer.x, layer.y);
+    ctx.rotate(((layer.rotation || 0) * Math.PI) / 180);
+
+    if (layer.hasShadow !== false) {
+      ctx.shadowColor = 'rgba(0,0,0,0.45)';
+      ctx.shadowBlur = 16; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 7;
+    }
+
+    ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+
+    const r = style === 'round' ? Math.min(36, bw * 0.15, bh * 0.2) : 0;
+    const tw = Math.min(44, bw * 0.16), th = Math.min(56, Math.max(28, bh * 0.24));
+    const offsetSide = Math.max(r + 12, bw * 0.14);
+
+    if (style === 'spike') {
+      const spikes = 22, rx = bw / 2, ry = bh / 2;
+      ctx.beginPath();
+      for (let i = 0; i < spikes * 2; i++) {
+        const angle = (i * Math.PI) / spikes;
+        const rScale = i % 2 === 0 ? 1.08 : 0.80;
+        ctx.lineTo(Math.cos(angle) * rx * rScale, Math.sin(angle) * ry * rScale);
+      }
+      ctx.closePath(); ctx.fill(); if (lineWidth > 0) ctx.stroke();
+    } else if (style === 'oval' || style === 'cloud') {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, bw / 2, bh / 2, 0, 0, Math.PI * 2);
+      ctx.fill(); if (lineWidth > 0) ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(bx + r, by);
+      if (tail === 'top-center') { ctx.lineTo(-tw / 2, by); ctx.lineTo(0, by - th); ctx.lineTo(tw / 2, by); }
+      ctx.lineTo(bx + bw - r, by);
+      if (r > 0) ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
+      if (tail === 'right') { ctx.lineTo(bx + bw, -tw / 2); ctx.lineTo(bx + bw + th, 0); ctx.lineTo(bx + bw, tw / 2); }
+      ctx.lineTo(bx + bw, by + bh - r);
+      if (r > 0) ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh);
+      if (tail === 'bottom-right') { ctx.lineTo(bx + bw - offsetSide, by + bh); ctx.lineTo(bx + bw - offsetSide + 10, by + bh + th); ctx.lineTo(bx + bw - offsetSide - tw, by + bh); }
+      else if (tail === 'bottom-center') { ctx.lineTo(tw / 2, by + bh); ctx.lineTo(0, by + bh + th); ctx.lineTo(-tw / 2, by + bh); }
+      else if (tail === 'bottom-left') { ctx.lineTo(bx + offsetSide + tw, by + bh); ctx.lineTo(bx + offsetSide - 10, by + bh + th); ctx.lineTo(bx + offsetSide, by + bh); }
+      ctx.lineTo(bx + r, by + bh);
+      if (r > 0) ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - r);
+      if (tail === 'left') { ctx.lineTo(bx, tw / 2); ctx.lineTo(bx - th, 0); ctx.lineTo(bx, -tw / 2); }
+      ctx.lineTo(bx, by + r);
+      if (r > 0) ctx.quadraticCurveTo(bx, by, bx + r, by);
+      ctx.closePath(); ctx.fill(); if (lineWidth > 0) ctx.stroke();
+    }
+
+    if (activeLayer && activeLayer.id === layer.id) {
+      ctx.shadowColor = 'transparent'; ctx.globalAlpha = 1.0;
+      ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
+      getSbHandles(bw, bh).forEach(h => {
+        ctx.beginPath(); ctx.arc(h.x, h.y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = '#10b981'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+      });
+    }
+    ctx.restore();
+  }
+
+  if (!window.__speechBubbleHooked) {
+    window.__speechBubbleHooked = true;
+    const origRender = window.render;
+    window.render = function() {
+      origRender.apply(this, arguments);
+      layers.forEach(l => { if (l.type === 'speechBubble') drawSpeechBubbleLayer(l); });
+    };
+    const origSelect = window.selectLayer;
+    window.selectLayer = function(layer) {
+      origSelect.apply(this, arguments);
+      const panel = document.getElementById('speechBubbleInspector');
+      if (!panel) return;
+      if (layer && layer.type === 'speechBubble') {
+        document.getElementById('inspectorTitle').innerText = '💬 吹き出しプロパティ';
+        panel.classList.remove('hidden');
+      } else { panel.classList.add('hidden'); }
+    };
+    document.getElementById('sbStyle').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.sbStyle = e.target.value; render(); } };
+    document.getElementById('sbTail').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.sbTail = e.target.value; render(); } };
+    document.getElementById('sbW').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.bw = +e.target.value; document.getElementById('sbWVal').innerText = activeLayer.bw; render(); } };
+    document.getElementById('sbH').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.bh = +e.target.value; document.getElementById('sbHVal').innerText = activeLayer.bh; render(); } };
+    document.getElementById('sbFill').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.fillColor = e.target.value; render(); } };
+    document.getElementById('sbStroke').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.strokeColor = e.target.value; render(); } };
+    document.getElementById('sbLine').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.lineWidth = +e.target.value; document.getElementById('sbLineVal').innerText = activeLayer.lineWidth; render(); } };
+    document.getElementById('sbShadow').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.hasShadow = e.target.checked; render(); } };
+  }
+
+  onShmlAction('add_speech_bubble', () => {
+    const layer = {
+      id: Date.now(), type: 'speechBubble', name: '💬 吹き出し',
+      x: 640, y: 360, bw: 460, bh: 240, rotation: 0, opacity: 100,
+      sbStyle: 'round', sbTail: 'bottom-left', fillColor: '#ffffff', strokeColor: '#000000', lineWidth: 8, hasShadow: true
+    };
+    layers.push(layer); selectLayer(layer);
+  });
+})();
+__`
+            },
+            {
+                title: '⚡ 集中線エフェクト追加',
+                author: 'YuJitsu Official',
+                description: 'サムネイルに迫力を出すマンガ風「集中線」レイヤーを追加できる公式プラグインです。\n\n【主な機能】\n・集中線の色、線の太さ、本数（密度）、中心の余白サイズをスライダーでリアルタイム調整\n・中心のオレンジターゲットをドラッグして、注目させたいキャラや文字に中心点を自由に移動可能\n・レイヤーの「上へ・下へ」ボタンで背景と文字の間に挟むこともできます！',
+                fileName: 'shuuchuusenn.shml',
+                downloads: 214,
+                createdAt: Date.now() - 1000 * 60 * 60 * 24,
+                content: `[change]
+# レイヤー追加パネルに「⚡ 集中線を追加」ボタンを追加
+(+"59")-("⚡ 集中線を追加","{button}")-{button}:<add_focus_lines>
+_
+[html]
+("1~40"):{
+<div id="focusLineInspector" class="space-y-2 bg-[#161b22] p-2.5 rounded border border-amber-500/60 mt-2 hidden">
+  <div class="flex justify-between items-center border-b border-amber-500/30 pb-1">
+    <span class="text-[11px] font-bold text-amber-300">⚡ 集中線プロパティ (中心ドラッグで移動)</span>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <span class="text-[10px] text-gray-400">集中線の色</span>
+      <input type="color" id="flColor" value="#ffffff" class="w-full h-6 rounded cursor-pointer">
+    </div>
+    <div>
+      <span class="text-[10px] text-gray-400">太さ <span id="flThicknessVal" class="text-amber-300 font-bold">8</span></span>
+      <input type="range" id="flThickness" min="1" max="30" value="8" class="w-full">
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <span class="text-[10px] text-gray-400">密度(本数) <span id="flDensityVal" class="text-amber-300 font-bold">80</span>本</span>
+      <input type="range" id="flDensity" min="20" max="200" value="80" class="w-full">
+    </div>
+    <div>
+      <span class="text-[10px] text-gray-400">長さ(余白) <span id="flLengthVal" class="text-amber-300 font-bold">260</span></span>
+      <input type="range" id="flLength" min="80" max="580" value="260" class="w-full">
+    </div>
+  </div>
+</div>
+}
+_
+[javascript]
+:
+(() => {
+  const inspectorPanel = document.getElementById('inspectorPanel');
+  const flInspector = document.getElementById('focusLineInspector');
+  if (inspectorPanel && flInspector) inspectorPanel.appendChild(flInspector);
+
+  if (!window.__focusLinesHooked) {
+    window.__focusLinesHooked = true;
+    const origRender = window.render;
+    window.render = function() {
+      origRender.apply(this, arguments);
+      layers.forEach((layer) => {
+        if (layer.type !== 'focusLines') return;
+        ctx.save();
+        ctx.globalAlpha = layer.opacity !== undefined ? Math.max(0, Math.min(1, layer.opacity / 100)) : 1.0;
+        ctx.translate(layer.x, layer.y);
+        ctx.rotate(((layer.rotation || 0) * Math.PI) / 180);
+        const count = layer.density || 80;
+        const innerRadius = layer.innerRadius || 260;
+        const outerRadius = 1500;
+        const baseWidth = (layer.thickness || 8) * 0.0045;
+        ctx.fillStyle = layer.color || '#ffffff';
+
+        for (let i = 0; i < count; i++) {
+          const seed1 = Math.sin(i * 12.9898 + layer.id * 0.001) * 43758.5453;
+          const rand1 = seed1 - Math.floor(seed1);
+          const seed2 = Math.sin(i * 78.233 + layer.id * 0.002) * 24634.6345;
+          const rand2 = seed2 - Math.floor(seed2);
+          const angle = (i / count) * Math.PI * 2 + (rand1 - 0.5) * (Math.PI / count);
+          const rStart = innerRadius * (0.78 + rand2 * 0.45);
+          const spread = baseWidth * (0.5 + rand1 * 1.1);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * rStart, Math.sin(angle) * rStart);
+          ctx.lineTo(Math.cos(angle - spread) * outerRadius, Math.sin(angle - spread) * outerRadius);
+          ctx.lineTo(Math.cos(angle + spread) * outerRadius, Math.sin(angle + spread) * outerRadius);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+      });
+    };
+
+    const origSelectLayer = window.selectLayer;
+    window.selectLayer = function(layer) {
+      origSelectLayer.apply(this, arguments);
+      const panel = document.getElementById('focusLineInspector');
+      if (!panel) return;
+      if (layer && layer.type === 'focusLines') {
+        document.getElementById('inspectorTitle').innerText = '⚡ 集中線プロパティ';
+        panel.classList.remove('hidden');
+      } else { panel.classList.add('hidden'); }
+    };
+
+    document.getElementById('flColor').oninput = (e) => { if (activeLayer?.type === 'focusLines') { activeLayer.color = e.target.value; render(); } };
+    document.getElementById('flThickness').oninput = (e) => { if (activeLayer?.type === 'focusLines') { activeLayer.thickness = parseInt(e.target.value, 10); document.getElementById('flThicknessVal').innerText = activeLayer.thickness; render(); } };
+    document.getElementById('flDensity').oninput = (e) => { if (activeLayer?.type === 'focusLines') { activeLayer.density = parseInt(e.target.value, 10); document.getElementById('flDensityVal').innerText = activeLayer.density; render(); } };
+    document.getElementById('flLength').oninput = (e) => { if (activeLayer?.type === 'focusLines') { const val = parseInt(e.target.value, 10); document.getElementById('flLengthVal').innerText = val; activeLayer.innerRadius = 660 - val; render(); } };
+  }
+
+  onShmlAction('add_focus_lines', () => {
+    const layer = { id: Date.now(), type: 'focusLines', name: '⚡ 集中線', x: 640, y: 360, rotation: 0, opacity: 100, color: '#ffffff', thickness: 8, density: 80, innerRadius: 260 };
+    layers.push(layer); selectLayer(layer);
+  });
+})();
+__`
+            },
+            {
+                title: '↔️ テキスト＆画像 左右・上下反転',
+                author: 'YuJitsu Official',
+                description: '選択中のテキストレイヤーやサブ画像レイヤーをワンクリックで「↔️ 左右反転」「↕️ 上下反転」できる軽量ユーティリティプラグインです。\n\n立ち絵イラストの向きを変えたい時や、鏡文字エフェクトを作りたい時に超便利です！',
+                fileName: 'hanntenn.shml',
+                downloads: 96,
+                createdAt: Date.now() - 1000 * 60 * 60 * 48,
+                content: `[html]
+("1~20"):{
+<div id="shmlFlipControls" class="grid grid-cols-2 gap-1.5 mt-1.5 hidden">
+  <button id="shmlBtnFlipH" class="btn-toggle font-bold">↔️ 左右反転</button>
+  <button id="shmlBtnFlipV" class="btn-toggle font-bold">↕️ 上下反転</button>
+</div>
+}
+_
+[javascript]
+:
+(() => {
+  const inspectorPanel = document.getElementById('inspectorPanel');
+  const flipBox = document.getElementById('shmlFlipControls');
+  const rotInput = document.getElementById('layerRotation');
+  if (inspectorPanel && flipBox && rotInput) {
+    const rotGrid = rotInput.closest('.grid');
+    if (rotGrid) inspectorPanel.insertBefore(flipBox, rotGrid);
+    else inspectorPanel.appendChild(flipBox);
+  }
+
+  if (!window.__shmlFlipHooked) {
+    window.__shmlFlipHooked = true;
+    const origSelectLayer = window.selectLayer;
+    window.selectLayer = function(layer) {
+      origSelectLayer.apply(this, arguments);
+      const box = document.getElementById('shmlFlipControls');
+      if (!box) return;
+      if (layer && (layer.type === 'text' || layer.type === 'image')) {
+        box.classList.remove('hidden');
+        document.getElementById('shmlBtnFlipH').classList.toggle('active', !!layer.flipH);
+        document.getElementById('shmlBtnFlipV').classList.toggle('active', !!layer.flipV);
+      } else { box.classList.add('hidden'); }
+    };
+
+    document.getElementById('shmlBtnFlipH').onclick = () => {
+      if (!activeLayer || (activeLayer.type !== 'text' && activeLayer.type !== 'image')) return;
+      activeLayer.flipH = !activeLayer.flipH;
+      document.getElementById('shmlBtnFlipH').classList.toggle('active', activeLayer.flipH);
+      render();
+    };
+
+    document.getElementById('shmlBtnFlipV').onclick = () => {
+      if (!activeLayer || (activeLayer.type !== 'text' && activeLayer.type !== 'image')) return;
+      activeLayer.flipV = !activeLayer.flipV;
+      document.getElementById('shmlBtnFlipV').classList.toggle('active', activeLayer.flipV);
+      render();
+    };
+
+    const origRender = window.render;
+    window.render = function() {
+      let currentDrawingLayer = null;
+      const origTranslate = ctx.translate.bind(ctx);
+      const origRotate = ctx.rotate.bind(ctx);
+      ctx.translate = function(x, y) {
+        currentDrawingLayer = layers.find(l => l.x === x && l.y === y) || null;
+        return origTranslate(x, y);
+      };
+      ctx.rotate = function(rad) {
+        const res = origRotate(rad);
+        if (currentDrawingLayer && (currentDrawingLayer.type === 'image' || currentDrawingLayer.type === 'text')) {
+          if (currentDrawingLayer.flipH || currentDrawingLayer.flipV) {
+            ctx.scale(currentDrawingLayer.flipH ? -1 : 1, currentDrawingLayer.flipV ? -1 : 1);
+          }
+        }
+        return res;
+      };
+      try { origRender.apply(this, arguments); }
+      finally { ctx.translate = origTranslate; ctx.rotate = origRotate; }
+    };
+  }
+})();
+__`
+            }
+        ];
+
+        // アプリ状態
+        let allPlugins = [];
+        let currentSort = 'newest'; // 'newest' | 'popular'
+        let searchQuery = '';
+        let selectedPlugin = null;
+        let uploadedFileObj = null; // { name, content }
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+
+        // UI要素
+        const pluginGrid = document.getElementById('pluginGrid');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const pluginCountLabel = document.getElementById('pluginCountLabel');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const sortNewestBtn = document.getElementById('sortNewestBtn');
+        const sortPopularBtn = document.getElementById('sortPopularBtn');
+
+        // 接続ステータス表示更新
+        function setConnectionStatus(online, text) {
+            const dot = document.getElementById('statusDot');
+            const label = document.getElementById('statusText');
+            dot.className = `w-2 h-2 rounded-full ${online ? 'bg-[#10b981]' : 'bg-amber-400'}`;
+            label.textContent = text;
+        }
+
+        // 日付フォーマット
+        function formatDate(ts) {
+            if (!ts) return '不明';
+            const d = new Date(ts);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${y}/${m}/${day} ${hh}:${mm}`;
+        }
+
+        // 一覧のフィルタリング＆並べ替え＆描画
+        function renderPluginGrid() {
+            const q = searchQuery.trim().toLowerCase();
+
+            let filtered = allPlugins.filter(p => {
+                if (!q) return true;
+                const blocks = detectShmlBlocks(p.content || '').join(' ').toLowerCase();
+                return (
+                    (p.title || '').toLowerCase().includes(q) ||
+                    (p.description || '').toLowerCase().includes(q) ||
+                    (p.author || '').toLowerCase().includes(q) ||
+                    (p.fileName || '').toLowerCase().includes(q) ||
+                    blocks.includes(q)
+                );
+            });
+
+            if (currentSort === 'popular') {
+                filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+            } else {
+                filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            }
+
+            pluginCountLabel.textContent = filtered.length;
+            loadingState.classList.add('hidden');
+
+            if (filtered.length === 0) {
+                pluginGrid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            pluginGrid.classList.remove('hidden');
+            pluginGrid.innerHTML = '';
+
+            filtered.forEach(plugin => {
+                const blocks = detectShmlBlocks(plugin.content || '');
+                const card = document.createElement('article');
+                card.className = 'plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4 cursor-pointer';
+
+                const badgesHtml = blocks.length > 0
+                    ? blocks.map(tag => `<span class="text-[10px] font-mono-code font-semibold px-2 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
+                    : `<span class="text-[10px] font-mono-code px-2 py-0.5 rounded-md border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="text-[11px] font-mono-code text-gray-400 bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] truncate max-w-[65%]">
+                                📄 ${escapeHtml(plugin.fileName || 'plugin.shml')}
+                            </span>
+                            <span class="text-xs font-extrabold text-[#58a6ff] bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-lg flex-none">
+                                ⬇️ ${(plugin.downloads || 0).toLocaleString()}
+                            </span>
+                        </div>
+
+                        <div>
+                            <h2 class="text-base font-extrabold text-white line-clamp-2 leading-snug">
+                                ${escapeHtml(plugin.title)}
+                            </h2>
+                            <p class="text-xs text-gray-400 mt-1.5 line-clamp-3 leading-relaxed">
+                                ${escapeHtml(plugin.description)}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            ${badgesHtml}
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#30363d] flex items-center justify-between text-[11px] text-gray-400">
+                        <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '匿名クリエイター')}</span>
+                        <span>${formatDate(plugin.createdAt)}</span>
+                    </div>
+                `;
+
+                card.onclick = () => openDetailModal(plugin);
+                pluginGrid.appendChild(card);
+            });
+        }
+
+        // 詳細モーダルを開く
+        function openDetailModal(plugin) {
+            selectedPlugin = plugin;
+            document.getElementById('detailFileNameBadge').textContent = `📄 ${plugin.fileName || 'plugin.shml'}`;
+            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(plugin.downloads || 0).toLocaleString()} DL`;
+            document.getElementById('detailTitle').textContent = plugin.title;
+            document.getElementById('detailAuthor').textContent = plugin.author || '匿名クリエイター';
+            document.getElementById('detailDate').textContent = formatDate(plugin.createdAt);
+            document.getElementById('detailDescription').textContent = plugin.description;
+            document.getElementById('detailCodePreview').textContent = plugin.content;
+
+            const blocks = detectShmlBlocks(plugin.content || '');
+            const tagsRow = document.getElementById('detailTagsRow');
+            tagsRow.innerHTML = blocks.map(tag =>
+                `<span class="text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`
+            ).join('');
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            selectedPlugin = null;
+        }
+
+        // .shml ファイルダウンロード処理＆カウントアップ
+        async function handleDownloadPlugin() {
+            if (!selectedPlugin) return;
+            const plugin = selectedPlugin;
+
+            // 拡張子を .shml に統一してUTF-8でダウンロード
+            let dlName = (plugin.fileName || 'plugin.shml').trim();
+            if (!dlName.toLowerCase().endsWith('.shml')) {
+                dlName = dlName.replace(/\.[^/.]+$/, '') + '.shml';
+            }
+
+            const blob = new Blob([plugin.content || ''], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = dlName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`「${dlName}」をダウンロードしました！`);
+
+            // Firestore のダウンロード数を +1 更新
+            if (db && currentUser && plugin.id && !String(plugin.id).startsWith('local-')) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shml_plugins', plugin.id);
+                    await updateDoc(docRef, {
+                        downloads: increment(1)
+                    });
+                    // 開いているモーダル表示も即時更新
+                    const nextCount = (plugin.downloads || 0) + 1;
+                    plugin.downloads = nextCount;
+                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${nextCount.toLocaleString()} DL`;
+                } catch (err) {
+                    console.error('ダウンロード数更新エラー:', err);
+                }
+            } else {
+                plugin.downloads = (plugin.downloads || 0) + 1;
+                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${plugin.downloads.toLocaleString()} DL`;
+                renderPluginGrid();
+            }
+        }
+
+        // コードコピー（iFrame互換の execCommand 方式）
+        function copyCodeToClipboard() {
+            if (!selectedPlugin) return;
+            const textarea = document.createElement('textarea');
+            textarea.value = selectedPlugin.content || '';
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('スクリプトコードをクリップボードにコピーしました！');
+            } catch (e) {
+                showToast('コピーに失敗しました', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // ==========================================
+        // アップロードモーダル制御
+        // ==========================================
+        const uploadModal = document.getElementById('uploadModal');
+        const shmlUploadInput = document.getElementById('shmlUploadInput');
+        const dropZone = document.getElementById('dropZone');
+
+        function openUploadModal() {
+            uploadedFileObj = null;
+            document.getElementById('uploadForm').reset();
+            document.getElementById('dropZoneDefault').classList.remove('hidden');
+            document.getElementById('dropZoneSelected').classList.add('hidden');
+            document.getElementById('uploadPreviewBox').classList.add('hidden');
+            uploadModal.classList.remove('hidden');
+        }
+
+        function closeUploadModal() {
+            uploadModal.classList.add('hidden');
+        }
+
+        function processSelectedFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const text = ev.target.result || '';
+                if (!text.trim()) {
+                    showToast('空のファイルはアップロードできません', 'error');
+                    return;
+                }
+
+                let cleanFileName = file.name;
+                if (!cleanFileName.toLowerCase().endsWith('.shml')) {
+                    cleanFileName = cleanFileName.replace(/\.[^/.]+$/, '') + '.shml';
+                }
+
+                uploadedFileObj = {
+                    name: cleanFileName,
+                    content: text
+                };
+
+                document.getElementById('dropZoneDefault').classList.add('hidden');
+                document.getElementById('dropZoneSelected').classList.remove('hidden');
+                document.getElementById('selectedFileName').textContent = `📄 ${cleanFileName}`;
+                document.getElementById('selectedFileMeta').textContent = `${text.split('\n').length} 行 / ${(new Blob([text]).size)} Bytes`;
+
+                // タイトル未入力ならファイル名から自動補完
+                const titleInput = document.getElementById('uploadTitle');
+                if (!titleInput.value.trim()) {
+                    titleInput.value = cleanFileName.replace(/\.shml$/i, '');
+                }
+
+                // プレビュー＆ブロックタグ検出
+                const blocks = detectShmlBlocks(text);
+                document.getElementById('uploadDetectedTags').innerHTML = blocks.map(tag =>
+                    `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`
+                ).join('');
+                document.getElementById('uploadCodePreview').textContent = text;
+                document.getElementById('uploadPreviewBox').classList.remove('hidden');
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        dropZone.onclick = () => shmlUploadInput.click();
+        shmlUploadInput.onchange = (e) => processSelectedFile(e.target.files[0]);
+
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-[#10b981]', 'bg-emerald-950/20');
+        };
+        dropZone.ondragleave = () => {
+            dropZone.classList.remove('border-[#10b981]', 'bg-emerald-950/20');
+        };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-[#10b981]', 'bg-emerald-950/20');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                processSelectedFile(e.dataTransfer.files[0]);
+            }
+        };
+
+        // フォーム送信（Firestoreへ保存）
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            if (!uploadedFileObj) {
+                showToast('.shml または .txt ファイルを選択してください', 'error');
+                return;
+            }
+
+            const title = document.getElementById('uploadTitle').value.trim();
+            const author = document.getElementById('uploadAuthor').value.trim() || '匿名クリエイター';
+            const description = document.getElementById('uploadDescription').value.trim();
+
+            if (!title || !description) {
+                showToast('タイトルと概要を入力してください', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitUploadBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>⏳</span><span>公開処理中...</span>';
+
+            const newPluginData = {
+                title,
+                author,
+                description,
+                fileName: uploadedFileObj.name,
+                content: uploadedFileObj.content,
+                downloads: 0,
+                createdAt: Date.now()
+            };
+
+            try {
+                if (db && currentUser) {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'shml_plugins');
+                    await addDoc(colRef, newPluginData);
+                } else {
+                    allPlugins.unshift({ id: 'local-' + Date.now(), ...newPluginData });
+                    renderPluginGrid();
+                }
+
+                closeUploadModal();
+                showToast(`「${title}」をコミュニティのホームに公開しました！`);
+            } catch (err) {
+                console.error('アップロードエラー:', err);
+                showToast('公開中にエラーが発生しました: ' + err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>🚀</span><span>ホームに公開する</span>';
+            }
+        };
+
+        // ==========================================
+        // イベントリスナー登録
+        // ==========================================
+        document.getElementById('openUploadModalBtn').onclick = openUploadModal;
+        document.getElementById('closeUploadModalBtn').onclick = closeUploadModal;
+        document.getElementById('cancelUploadBtn').onclick = closeUploadModal;
+        document.getElementById('closeDetailModalBtn').onclick = closeDetailModal;
+        document.getElementById('downloadShmlBtn').onclick = handleDownloadPlugin;
+        document.getElementById('copyCodeBtn').onclick = copyCodeToClipboard;
+
+        // モーダル背景クリックで閉じる
+        document.getElementById('detailModal').onclick = (e) => {
+            if (e.target.id === 'detailModal') closeDetailModal();
+        };
+        document.getElementById('uploadModal').onclick = (e) => {
+            if (e.target.id === 'uploadModal') closeUploadModal();
+        };
+
+        // 検索入力
+        searchInput.oninput = (e) => {
+            searchQuery = e.target.value;
+            clearSearchBtn.classList.toggle('hidden', !searchQuery);
+            renderPluginGrid();
+        };
+        clearSearchBtn.onclick = () => {
+            searchQuery = '';
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            renderPluginGrid();
+        };
+
+        // 並べ替えボタン
+        sortNewestBtn.onclick = () => {
+            currentSort = 'newest';
+            sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#10b981] text-[#0d1117] cursor-pointer';
+            sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer';
+            renderPluginGrid();
+        };
+        sortPopularBtn.onclick = () => {
+            currentSort = 'popular';
+            sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#10b981] text-[#0d1117] cursor-pointer';
+            sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer';
+            renderPluginGrid();
+        };
+
+        // ==========================================
+        // Firebase 初期化 ＆ リアルタイム同期
+        // ==========================================
+        async function initApp() {
+            if (!firebaseConfig) {
+                // オフラインフォールバック
+                setConnectionStatus(false, 'ローカルプレビュー');
+                allPlugins = INITIAL_SEED_PLUGINS.map((p, idx) => ({ id: 'local-seed-' + idx, ...p }));
+                renderPluginGrid();
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // RULE 3: 必ず認証を先に完了させる
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                currentUser = auth.currentUser;
+                onAuthStateChanged(auth, (u) => { currentUser = u; });
+
+                if (!currentUser) return;
+                setConnectionStatus(true, 'コミュニティ同期中');
+
+                // RULE 1: Strict Path
+                const pluginsCol = collection(db, 'artifacts', appId, 'public', 'data', 'shml_plugins');
+
+                // 初回シードデータ投入チェック
+                const initialSnap = await getDocs(pluginsCol);
+                if (initialSnap.empty) {
+                    for (const seed of INITIAL_SEED_PLUGINS) {
+                        await addDoc(pluginsCol, seed);
+                    }
+                }
+
+                // RULE 2: シンプルな collection() クエリで全件取得し、JS側でソート・検索
+                onSnapshot(
+                    pluginsCol,
+                    (snapshot) => {
+                        const list = [];
+                        snapshot.forEach(docSnap => {
+                            list.push({ id: docSnap.id, ...docSnap.data() });
+                        });
+                        allPlugins = list;
+                        renderPluginGrid();
+
+                        // 詳細モーダルを開いている最中にダウンロード数が変わったらリアルタイム反映
+                        if (selectedPlugin) {
+                            const updated = allPlugins.find(p => p.id === selectedPlugin.id);
+                            if (updated) {
+                                selectedPlugin = updated;
+                                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(updated.downloads || 0).toLocaleString()} DL`;
+                            }
+                        }
+                    },
+                    (error) => {
+                        console.error('Firestore購読エラー:', error);
+                        setConnectionStatus(false, '同期エラー');
+                        showToast('データの同期中にエラーが発生しました', 'error');
+                    }
+                );
+            } catch (err) {
+                console.error('初期化エラー:', err);
+                setConnectionStatus(false, 'オフラインモード');
+                allPlugins = INITIAL_SEED_PLUGINS.map((p, idx) => ({ id: 'local-seed-' + idx, ...p }));
+                renderPluginGrid();
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
