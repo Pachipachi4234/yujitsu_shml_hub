@@ -319,7 +319,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, onSnapshot, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // 環境グローバル変数の取得
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'yujitsu-shml-hub';
@@ -382,12 +382,12 @@
         }
 
         // ==========================================
-        // 初期シードデータ（3つの実用 .shml プラグイン）
+        // 初期シードデータ（3つの実用 .shml プラグイン・すべて 0 DL スタート）
         // ==========================================
         const INITIAL_SEED_PLUGINS = [
             {
                 title: '💬 吹き出しジェネレーター (図形変形対応)',
-                author: 'YuJitsu Official',
+                author: 'YuJitsu Dev',
                 description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（上下左右・斜め・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接マウスドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
                 fileName: 'speech_bubble.shml',
                 downloads: 0,
@@ -592,7 +592,7 @@ __`
             },
             {
                 title: '⚡ 集中線エフェクト追加',
-                author: 'YuJitsu Official',
+                author: 'YuJitsu Dev',
                 description: 'サムネイルに迫力を出すマンガ風「集中線」レイヤーを追加できる公式プラグインです。\n\n【主な機能】\n・集中線の色、線の太さ、本数（密度）、中心の余白サイズをスライダーでリアルタイム調整\n・中心のオレンジターゲットをドラッグして、注目させたいキャラや文字に中心点を自由に移動可能\n・レイヤーの「上へ・下へ」ボタンで背景と文字の間に挟むこともできます！',
                 fileName: 'shuuchuusenn.shml',
                 downloads: 0,
@@ -698,7 +698,7 @@ __`
             },
             {
                 title: '↔️ テキスト＆画像 左右・上下反転',
-                author: 'YuJitsu Official',
+                author: 'YuJitsu Dev',
                 description: '選択中のテキストレイヤーやサブ画像レイヤーをワンクリックで「↔️ 左右反転」「↕️ 上下反転」できる軽量ユーティリティプラグインです。\n\n立ち絵イラストの向きを変えたい時や、鏡文字エフェクトを作りたい時に超便利です！',
                 fileName: 'hanntenn.shml',
                 downloads: 0,
@@ -1193,12 +1193,29 @@ __`
 
                 // RULE 1: Strict Path
                 const pluginsCol = collection(db, 'artifacts', appId, 'public', 'data', 'shml_plugins');
+                const metaDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'shml_meta', 'reset_v1');
 
-                // 初回シードデータ投入チェック
+                // 初回シードデータ投入 ＆ 過去のダミーDL数（128/214/96）のワンタイム0リセット
                 const initialSnap = await getDocs(pluginsCol);
                 if (initialSnap.empty) {
                     for (const seed of INITIAL_SEED_PLUGINS) {
                         await addDoc(pluginsCol, seed);
+                    }
+                    await setDoc(metaDocRef, { resetDone: true, updatedAt: Date.now() });
+                } else {
+                    const metaSnap = await getDoc(metaDocRef);
+                    if (!metaSnap.exists()) {
+                        const seedFiles = new Set(['speech_bubble.shml', 'shuuchuusenn.shml', 'hanntenn.shml']);
+                        for (const d of initialSnap.docs) {
+                            const data = d.data();
+                            if (seedFiles.has(data.fileName) && (data.downloads === 128 || data.downloads === 214 || data.downloads === 96)) {
+                                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shml_plugins', d.id), {
+                                    downloads: 0,
+                                    author: 'YuJitsu Dev'
+                                });
+                            }
+                        }
+                        await setDoc(metaDocRef, { resetDone: true, updatedAt: Date.now() });
                     }
                 }
 
