@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YuJitsu SHML Hub — 独自プラグイン共有コミュニティ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
@@ -64,12 +65,13 @@
                 </div>
             </div>
 
-            <!-- 右側：グローバル同期ステータス＆アップロードボタン -->
-            <div class="flex items-center gap-2.5 ml-auto">
-                <span id="connectionStatus" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 bg-[#0d1117] px-3 py-1.5 rounded-xl border border-[#30363d]">
+            <!-- 右側：グローバル同期ステータス・DB設定・アップロードボタン -->
+            <div class="flex flex-wrap items-center gap-2 ml-auto">
+                <button id="openDbConfigBtn" title="クラウドDB接続設定を開く" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-200 bg-[#0d1117] hover:bg-[#21262d] px-3 py-2 rounded-xl border border-[#30363d] hover:border-[#58a6ff] transition cursor-pointer">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
-                    <span id="statusText">接続準備中...</span>
-                </span>
+                    <span id="statusText">接続確認中...</span>
+                    <span class="text-gray-500 ml-0.5">⚙️</span>
+                </button>
                 <button id="openUploadModalBtn" class="bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-500/40 transition flex items-center gap-2 cursor-pointer">
                     <span>📤</span>
                     <span>ファイルをアップロード</span>
@@ -77,6 +79,19 @@
             </div>
         </div>
     </header>
+
+    <!-- DB未接続時の案内バナー（接続済みになると自動で非表示） -->
+    <div id="localModeBanner" class="hidden bg-amber-950/60 border-b border-amber-500/40 px-4 py-2.5">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-amber-200">
+            <div class="flex items-center gap-2">
+                <span>⚠️</span>
+                <span>現在は <strong>ローカルモード</strong> です（GitHub Pagesで全員と共有するには無料の Supabase キーを設定してください）。</span>
+            </div>
+            <button id="bannerOpenConfigBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
+                ☁️ 30秒でクラウドDB接続設定を開く
+            </button>
+        </div>
+    </div>
 
     <!-- メインコンテンツ -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5">
@@ -146,7 +161,7 @@
         <!-- ローディング表示 -->
         <div id="loadingState" class="py-20 text-center space-y-3">
             <div class="inline-block w-8 h-8 border-4 border-[#30363d] border-t-[#238636] rounded-full animate-spin"></div>
-            <p class="text-sm text-gray-400">グローバル共有データベースと同期中...</p>
+            <p class="text-sm text-gray-400">プラグイン一覧を読み込み中...</p>
         </div>
 
         <!-- 検索結果0件表示 -->
@@ -173,7 +188,6 @@
     <!-- ========================================== -->
     <div id="detailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- モーダルヘッダー -->
             <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-start justify-between gap-4">
                 <div class="space-y-1.5 min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
@@ -197,21 +211,17 @@
                 </button>
             </div>
 
-            <!-- モーダル本文 -->
             <div class="p-5 overflow-y-auto space-y-5 flex-1">
-                <!-- 使用されているSHMLブロック一覧 -->
                 <div class="space-y-1.5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">🧩 使用されているSHMLブロック</h3>
                     <div id="detailTagsRow" class="flex flex-wrap gap-1.5"></div>
                 </div>
 
-                <!-- 全文概要 -->
                 <div class="space-y-1.5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-[#58a6ff]">📖 概要・使い方</h3>
                     <div id="detailDescription" class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed"></div>
                 </div>
 
-                <!-- .shml スクリプトコードプレビュー -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">💻 .shml スクリプトコード</h3>
@@ -224,7 +234,6 @@
                 </div>
             </div>
 
-            <!-- モーダルフッター -->
             <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p class="text-[11px] text-gray-400">
                     ※ ThumbnailMaker Pro 右上の「🔌 プラグイン (.shml) 読込」から適用できます
@@ -242,7 +251,6 @@
     <!-- ========================================== -->
     <div id="uploadModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- ヘッダー -->
             <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">📤</span>
@@ -253,9 +261,7 @@
                 </button>
             </div>
 
-            <!-- フォーム本体 -->
             <form id="uploadForm" class="p-5 overflow-y-auto space-y-4 flex-1">
-                <!-- ファイルドロップ＆選択エリア -->
                 <div>
                     <label class="block text-xs font-bold text-gray-300 mb-1.5">
                         1. プラグインファイル (.shml / .txt) <span class="text-rose-400">*</span>
@@ -275,7 +281,6 @@
                     </div>
                 </div>
 
-                <!-- タイトル＆作者名 -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label for="uploadTitle" class="block text-xs font-bold text-gray-300 mb-1">
@@ -304,7 +309,6 @@
                     </div>
                 </div>
 
-                <!-- 概要・使い方 -->
                 <div>
                     <label for="uploadDescription" class="block text-xs font-bold text-gray-300 mb-1">
                         4. 概要・使い方 <span class="text-rose-400">*</span>
@@ -319,7 +323,6 @@
                     ></textarea>
                 </div>
 
-                <!-- 自動検出ブロック＆コードプレビュー -->
                 <div id="uploadPreviewBox" class="hidden space-y-1.5">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <span class="text-[11px] font-bold text-gray-400">自動検出されたSHMLブロック:</span>
@@ -329,7 +332,6 @@
                 </div>
             </form>
 
-            <!-- フッター -->
             <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex items-center justify-end gap-2.5">
                 <button type="button" id="cancelUploadBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white bg-[#161b22] border border-[#30363d] cursor-pointer">
                     キャンセル
@@ -342,18 +344,103 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- モーダル③：Supabase クラウドDB接続設定（GitHub Pages用） -->
+    <!-- ========================================== -->
+    <div id="dbConfigModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">☁️</span>
+                    <h2 class="text-base sm:text-lg font-extrabold text-white">Supabase クラウドDB接続設定 (GitHub Pages対応)</h2>
+                </div>
+                <button id="closeDbConfigBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4 flex-1 text-xs text-gray-300 leading-relaxed">
+                <div class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3.5 space-y-1">
+                    <p class="font-bold text-[#58a6ff]">💡 GitHub Pages で世界中の全員と共有する手順（完全無料・30秒）</p>
+                    <ol class="list-decimal list-inside space-y-1 text-gray-300">
+                        <li><a href="https://supabase.com/" target="_blank" rel="noopener" class="text-[#58a6ff] underline font-bold">Supabase</a> で無料プロジェクトを作成します。</li>
+                        <li>左メニューの <strong>SQL Editor</strong> に下のSQLを貼り付けて <strong>Run</strong> を押します。</li>
+                        <li><strong>Project Settings &gt; API</strong> にある <code>Project URL</code> と <code>anon public key</code> を下に入力して保存！（さらに HTML内の <code>SUPABASE_URL</code> と <code>SUPABASE_ANON_KEY</code> に書いて GitHub に上げると訪問者全員が最初から同期します）</li>
+                    </ol>
+                </div>
+
+                <!-- ワンクリックコピーSQL -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-emerald-400">1. Supabase SQL Editor に貼るテーブル作成SQL:</span>
+                        <button type="button" id="copySqlBtn" class="bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-2.5 py-1 rounded-lg font-bold transition cursor-pointer">
+                            📋 SQLをコピー
+                        </button>
+                    </div>
+                    <pre id="setupSqlCode" class="bg-[#010409] border border-[#30363d] rounded-xl p-3 text-[11px] font-mono-code text-emerald-300 overflow-x-auto leading-relaxed">create table if not exists public.shml_plugins (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  author text not null default '名無しクリエイター',
+  description text not null,
+  file_name text not null,
+  code text not null,
+  blocks text[] default '{}',
+  downloads bigint not null default 0,
+  created_at timestamptz default now()
+);
+
+alter table public.shml_plugins enable row level security;
+
+create policy "Public read" on public.shml_plugins for select using (true);
+create policy "Public insert" on public.shml_plugins for insert with check (true);
+create policy "Public update downloads" on public.shml_plugins for update using (true);
+
+alter publication supabase_realtime add table public.shml_plugins;</pre>
+                </div>
+
+                <!-- ブラウザテスト用キー入力フォーム -->
+                <form id="dbConfigForm" class="space-y-3 pt-2 border-t border-[#30363d]">
+                    <div>
+                        <label class="block font-bold text-gray-200 mb-1">2. Supabase Project URL</label>
+                        <input type="url" id="inputSupabaseUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3 py-2 text-xs font-mono-code text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-200 mb-1">3. Supabase anon public key</label>
+                        <input type="text" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3 py-2 text-xs font-mono-code text-white">
+                    </div>
+                </form>
+            </div>
+
+            <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex items-center justify-between gap-2">
+                <button type="button" id="resetDbConfigBtn" class="px-3 py-2 rounded-xl text-xs font-bold text-rose-300 hover:bg-rose-950/50 border border-rose-500/30 cursor-pointer">
+                    設定クリア
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="cancelDbConfigBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 bg-[#161b22] border border-[#30363d] cursor-pointer">
+                        閉じる
+                    </button>
+                    <button type="submit" form="dbConfigForm" class="bg-[#238636] hover:bg-[#2ea043] text-white font-extrabold text-xs px-5 py-2 rounded-xl shadow-lg border border-emerald-500/40 cursor-pointer">
+                        💾 保存して接続する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- カスタムトースト通知 -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Firebase SDK & グローバル同期ロジック -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        // =========================================================================
+        // ★ GitHub Pages 公開用設定：ここに Supabase の URL と anon key を貼ると
+        //   アクセスした世界中の全員が自動的にグローバル共有同期されます！
+        // =========================================================================
+        const SUPABASE_URL = "";
+        const SUPABASE_ANON_KEY = "";
 
-        // 環境グローバル変数
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'yujitsu-shml-hub';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const LOCAL_PLUGINS_STORAGE_KEY = 'yujitsu_shml_hub_local_plugins_v1';
+        const LOCAL_SB_URL_KEY = 'yujitsu_shml_hub_sb_url';
+        const LOCAL_SB_KEY_KEY = 'yujitsu_shml_hub_sb_key';
 
         // トースト通知
         function showToast(message, type = 'success') {
@@ -366,10 +453,7 @@
             toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✨'}</span><span>${escapeHtml(message)}</span>`;
             container.appendChild(toast);
 
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
@@ -385,12 +469,28 @@
                 .replace(/'/g, '&#039;');
         }
 
+        function copyTextSafe(text, successMsg) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg);
+            } catch (e) {
+                showToast('コピーに失敗しました', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
         // SHMLブロック自動検出
-        function detectShmlBlocks(content) {
+        function detectShmlBlocks(code) {
             const found = new Set();
             const regex = /^\s*\[(change|javascript|js|html|python|py|java|php)\]/gim;
             let m;
-            while ((m = regex.exec(content)) !== null) {
+            while ((m = regex.exec(code)) !== null) {
                 let tag = m[1].toLowerCase();
                 if (tag === 'js') tag = 'javascript';
                 if (tag === 'py') tag = 'python';
@@ -411,18 +511,17 @@
             }
         }
 
-        // ==========================================
-        // 公式サンプル3種（初期DL数はすべて 0 スタート）
-        // ==========================================
+        // 公式スタータープラグイン3種（すべて初期DL数 0）
         const INITIAL_SEED_PLUGINS = [
             {
                 title: '💬 吹き出しジェネレーター（緑●変形対応）',
                 author: 'YuJitsu Dev',
                 description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（左下・下・右下・左上・上・右上・左・右・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接ドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
-                fileName: 'speech_bubble.shml',
+                file_name: 'speech_bubble.shml',
+                blocks: ['[change]', '[html]', '[javascript]'],
                 downloads: 0,
-                createdAt: Date.now() - 1000 * 60 * 30,
-                content: `[change]
+                created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+                code: `[change]
 # レイヤー追加パネルに「💬 吹き出しを追加」ボタンを追加
 (+"59")-("💬 吹き出しを追加","{button}")-{button}:<add_speech_bubble>
 _
@@ -755,10 +854,11 @@ __`
                 title: '⚡ 集中線エフェクト追加',
                 author: 'YuJitsu Dev',
                 description: 'サムネイルに迫力を出すマンガ風「集中線」レイヤーを追加できる公式プラグインです。\n\n【主な機能】\n・集中線の色、線の太さ、本数（密度）、中心の余白サイズをスライダーでリアルタイム調整\n・中心のオレンジターゲットをドラッグして、注目させたいキャラや文字に中心点を自由に移動可能\n・レイヤーの「上へ・下へ」ボタンで背景と文字の間に挟むこともできます！',
-                fileName: 'shuuchuusenn.shml',
+                file_name: 'shuuchuusenn.shml',
+                blocks: ['[change]', '[html]', '[javascript]'],
                 downloads: 0,
-                createdAt: Date.now() - 1000 * 60 * 60 * 2,
-                content: `[change]
+                created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+                code: `[change]
 # レイヤー追加パネルに「⚡ 集中線を追加」ボタンを追加
 (+"59")-("⚡ 集中線を追加","{button}")-{button}:<add_focus_lines>
 _
@@ -862,10 +962,11 @@ __`
                 title: '↔️ レイヤー左右・上下反転',
                 author: 'YuJitsu Dev',
                 description: '選択中のテキストレイヤーやサブ画像レイヤーをワンクリックで「↔️ 左右反転」「↕️ 上下反転」できる軽量ユーティリティプラグインです。\n\n立ち絵イラストの向きを変えたい時や、鏡文字エフェクトを作りたい時に超便利です！',
-                fileName: 'hanntenn.shml',
+                file_name: 'hanntenn.shml',
+                blocks: ['[html]', '[javascript]'],
                 downloads: 0,
-                createdAt: Date.now() - 1000 * 60 * 60 * 6,
-                content: `[html]
+                created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+                code: `[html]
 ("1~20"):{
 <div id="shmlFlipControls" class="grid grid-cols-2 gap-1.5 mt-1.5 hidden">
   <button id="shmlBtnFlipH" class="btn-toggle font-bold">↔️ 左右反転</button>
@@ -941,15 +1042,14 @@ __`
         ];
 
         // アプリ状態
+        let supabaseClient = null;
+        let realtimeChannel = null;
         let allPlugins = [];
-        let currentSort = 'newest'; // 'newest' | 'popular'
+        let currentSort = 'newest';
         let activeBlockFilter = 'all';
         let searchQuery = '';
         let selectedPlugin = null;
         let uploadedFileObj = null;
-        let db = null;
-        let auth = null;
-        let currentUser = null;
 
         // DOM要素
         const pluginGrid = document.getElementById('pluginGrid');
@@ -961,16 +1061,25 @@ __`
         const sortNewestBtn = document.getElementById('sortNewestBtn');
         const sortPopularBtn = document.getElementById('sortPopularBtn');
 
+        function getActiveSupabaseConfig() {
+            const url = (SUPABASE_URL || localStorage.getItem(LOCAL_SB_URL_KEY) || '').trim();
+            const key = (SUPABASE_ANON_KEY || localStorage.getItem(LOCAL_SB_KEY_KEY) || '').trim();
+            return { url, key };
+        }
+
         function setConnectionStatus(online, text) {
             const dot = document.getElementById('statusDot');
             const label = document.getElementById('statusText');
+            const banner = document.getElementById('localModeBanner');
             dot.className = `w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
             label.textContent = text;
+            banner.classList.toggle('hidden', online);
         }
 
-        function formatDate(ts) {
-            if (!ts) return '不明';
-            const d = new Date(ts);
+        function formatDate(isoStr) {
+            if (!isoStr) return '不明';
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return '不明';
             const y = d.getFullYear();
             const m = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
@@ -979,12 +1088,34 @@ __`
             return `${y}/${m}/${day} ${hh}:${mm}`;
         }
 
-        // 一覧のフィルタリング・ソート・描画
+        // ローカルストレージ保存・読込（DB未設定時フォールバック）
+        function loadLocalPlugins() {
+            try {
+                const raw = localStorage.getItem(LOCAL_PLUGINS_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (e) {}
+            const seeded = INITIAL_SEED_PLUGINS.map((p, i) => ({ id: 'local-' + (i + 1), ...p }));
+            saveLocalPlugins(seeded);
+            return seeded;
+        }
+
+        function saveLocalPlugins(list) {
+            try {
+                localStorage.setItem(LOCAL_PLUGINS_STORAGE_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        // 一覧描画
         function renderPluginGrid() {
             const q = searchQuery.trim().toLowerCase();
 
             let filtered = allPlugins.filter(p => {
-                const blocks = detectShmlBlocks(p.content || '');
+                const codeText = p.code || '';
+                const blocks = Array.isArray(p.blocks) && p.blocks.length > 0 ? p.blocks : detectShmlBlocks(codeText);
+
                 if (activeBlockFilter !== 'all' && !blocks.includes(activeBlockFilter)) {
                     return false;
                 }
@@ -994,15 +1125,15 @@ __`
                     (p.title || '').toLowerCase().includes(q) ||
                     (p.description || '').toLowerCase().includes(q) ||
                     (p.author || '').toLowerCase().includes(q) ||
-                    (p.fileName || '').toLowerCase().includes(q) ||
+                    (p.file_name || '').toLowerCase().includes(q) ||
                     blocksStr.includes(q)
                 );
             });
 
             if (currentSort === 'popular') {
-                filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+                filtered.sort((a, b) => (Number(b.downloads) || 0) - (Number(a.downloads) || 0) || new Date(b.created_at) - new Date(a.created_at));
             } else {
-                filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             }
 
             pluginCountLabel.textContent = filtered.length;
@@ -1019,7 +1150,10 @@ __`
             pluginGrid.innerHTML = '';
 
             filtered.forEach(plugin => {
-                const blocks = detectShmlBlocks(plugin.content || '');
+                const blocks = Array.isArray(plugin.blocks) && plugin.blocks.length > 0
+                    ? plugin.blocks
+                    : detectShmlBlocks(plugin.code || '');
+
                 const card = document.createElement('article');
                 card.className = 'plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4 cursor-pointer';
 
@@ -1031,10 +1165,10 @@ __`
                     <div class="space-y-3">
                         <div class="flex items-start justify-between gap-2">
                             <span class="text-[11px] font-mono-code text-gray-400 bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] truncate max-w-[68%]">
-                                📄 ${escapeHtml(plugin.fileName || 'plugin.shml')}
+                                📄 ${escapeHtml(plugin.file_name || 'plugin.shml')}
                             </span>
                             <span class="text-xs font-extrabold text-[#58a6ff] bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-lg flex-none">
-                                ⬇️ ${(plugin.downloads || 0).toLocaleString()}
+                                ⬇️ ${(Number(plugin.downloads) || 0).toLocaleString()}
                             </span>
                         </div>
 
@@ -1054,7 +1188,7 @@ __`
 
                     <div class="pt-3 border-t border-[#30363d] flex items-center justify-between text-[11px] text-gray-400">
                         <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '名無しクリエイター')}</span>
-                        <span>${formatDate(plugin.createdAt)}</span>
+                        <span>${formatDate(plugin.created_at)}</span>
                     </div>
                 `;
 
@@ -1063,18 +1197,21 @@ __`
             });
         }
 
-        // 詳細モーダルを開く
+        // 詳細モーダル
         function openDetailModal(plugin) {
             selectedPlugin = plugin;
-            document.getElementById('detailFileNameBadge').textContent = `📄 ${plugin.fileName || 'plugin.shml'}`;
-            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(plugin.downloads || 0).toLocaleString()}`;
+            document.getElementById('detailFileNameBadge').textContent = `📄 ${plugin.file_name || 'plugin.shml'}`;
+            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(plugin.downloads) || 0).toLocaleString()}`;
             document.getElementById('detailTitle').textContent = plugin.title;
             document.getElementById('detailAuthor').textContent = plugin.author || '名無しクリエイター';
-            document.getElementById('detailDate').textContent = formatDate(plugin.createdAt);
+            document.getElementById('detailDate').textContent = formatDate(plugin.created_at);
             document.getElementById('detailDescription').textContent = plugin.description;
-            document.getElementById('detailCodePreview').textContent = plugin.content;
+            document.getElementById('detailCodePreview').textContent = plugin.code || '';
 
-            const blocks = detectShmlBlocks(plugin.content || '');
+            const blocks = Array.isArray(plugin.blocks) && plugin.blocks.length > 0
+                ? plugin.blocks
+                : detectShmlBlocks(plugin.code || '');
+
             const tagsRow = document.getElementById('detailTagsRow');
             tagsRow.innerHTML = blocks.length > 0
                 ? blocks.map(tag => `<span class="text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
@@ -1088,17 +1225,17 @@ __`
             selectedPlugin = null;
         }
 
-        // .shml ファイルダウンロード＆データベース上の downloads を increment(1)
+        // ダウンロード＆DL数カウントアップ
         async function handleDownloadPlugin() {
             if (!selectedPlugin) return;
             const plugin = selectedPlugin;
 
-            let dlName = (plugin.fileName || 'plugin.shml').trim();
+            let dlName = (plugin.file_name || 'plugin.shml').trim();
             if (!dlName.toLowerCase().endsWith('.shml')) {
                 dlName = dlName.replace(/\.[^/.]+$/, '') + '.shml';
             }
 
-            const blob = new Blob([plugin.content || ''], { type: 'text/plain;charset=utf-8' });
+            const blob = new Blob([plugin.code || ''], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1110,47 +1247,27 @@ __`
 
             showToast(`「${dlName}」をダウンロードしました！`);
 
-            // パブリック共有コレクションの downloads を +1
-            if (db && currentUser && plugin.id && !String(plugin.id).startsWith('local-')) {
+            const nextCount = (Number(plugin.downloads) || 0) + 1;
+            plugin.downloads = nextCount;
+            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${nextCount.toLocaleString()}`;
+            renderPluginGrid();
+
+            if (supabaseClient && plugin.id && !String(plugin.id).startsWith('local-')) {
                 try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shml_plugins', plugin.id);
-                    await updateDoc(docRef, {
-                        downloads: increment(1)
-                    });
-                    const nextCount = (plugin.downloads || 0) + 1;
-                    plugin.downloads = nextCount;
-                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${nextCount.toLocaleString()}`;
+                    const { error } = await supabaseClient
+                        .from('shml_plugins')
+                        .update({ downloads: nextCount })
+                        .eq('id', plugin.id);
+                    if (error) throw error;
                 } catch (err) {
-                    console.error('ダウンロード数更新エラー:', err);
+                    console.error('Supabase DL数更新エラー:', err);
                 }
             } else {
-                plugin.downloads = (plugin.downloads || 0) + 1;
-                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${plugin.downloads.toLocaleString()}`;
-                renderPluginGrid();
+                saveLocalPlugins(allPlugins);
             }
         }
 
-        // コードコピー（iFrame互換の execCommand 方式）
-        function copyCodeToClipboard() {
-            if (!selectedPlugin) return;
-            const textarea = document.createElement('textarea');
-            textarea.value = selectedPlugin.content || '';
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                showToast('スクリプトコードをコピーしました！');
-            } catch (e) {
-                showToast('コピーに失敗しました', 'error');
-            }
-            document.body.removeChild(textarea);
-        }
-
-        // ==========================================
-        // アップロードモーダル制御
-        // ==========================================
+        // アップロードモーダル
         const uploadModal = document.getElementById('uploadModal');
         const shmlUploadInput = document.getElementById('shmlUploadInput');
         const dropZone = document.getElementById('dropZone');
@@ -1185,7 +1302,8 @@ __`
 
                 uploadedFileObj = {
                     name: cleanFileName,
-                    content: text
+                    code: text,
+                    blocks: detectShmlBlocks(text)
                 };
 
                 document.getElementById('dropZoneDefault').classList.add('hidden');
@@ -1198,9 +1316,8 @@ __`
                     titleInput.value = cleanFileName.replace(/\.shml$/i, '');
                 }
 
-                const blocks = detectShmlBlocks(text);
-                document.getElementById('uploadDetectedTags').innerHTML = blocks.length > 0
-                    ? blocks.map(tag => `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
+                document.getElementById('uploadDetectedTags').innerHTML = uploadedFileObj.blocks.length > 0
+                    ? uploadedFileObj.blocks.map(tag => `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
                     : `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
                 document.getElementById('uploadCodePreview').textContent = text;
                 document.getElementById('uploadPreviewBox').classList.remove('hidden');
@@ -1226,7 +1343,6 @@ __`
             }
         };
 
-        // フォーム送信（パブリック共有コレクションへ保存）
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
             if (!uploadedFileObj) {
@@ -1247,54 +1363,107 @@ __`
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span>⏳</span><span>公開中...</span>';
 
-            const newPluginData = {
+            const payload = {
                 title,
                 author,
                 description,
-                fileName: uploadedFileObj.name,
-                content: uploadedFileObj.content,
-                downloads: 0,
-                createdAt: Date.now()
+                file_name: uploadedFileObj.name,
+                code: uploadedFileObj.code,
+                blocks: uploadedFileObj.blocks,
+                downloads: 0
             };
 
             try {
-                if (db && currentUser) {
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'shml_plugins');
-                    await addDoc(colRef, newPluginData);
+                if (supabaseClient) {
+                    const { data, error } = await supabaseClient
+                        .from('shml_plugins')
+                        .insert([payload])
+                        .select();
+                    if (error) throw error;
+                    if (data && data[0] && !allPlugins.some(p => p.id === data[0].id)) {
+                        allPlugins.unshift(data[0]);
+                        renderPluginGrid();
+                    }
                 } else {
-                    allPlugins.unshift({ id: 'local-' + Date.now(), ...newPluginData });
+                    const localItem = {
+                        id: 'local-' + Date.now(),
+                        ...payload,
+                        created_at: new Date().toISOString()
+                    };
+                    allPlugins.unshift(localItem);
+                    saveLocalPlugins(allPlugins);
                     renderPluginGrid();
                 }
 
                 closeUploadModal();
-                showToast(`「${title}」をコミュニティに公開しました！`);
+                showToast(`「${title}」を公開しました！`);
             } catch (err) {
                 console.error('アップロードエラー:', err);
-                showToast('公開中にエラーが発生しました: ' + err.message, 'error');
+                showToast('公開エラー: ' + (err.message || 'DBのRLSポリシーを確認してください'), 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>🚀</span><span>コミュニティに公開する</span>';
             }
         };
 
-        // ==========================================
-        // イベントリスナー登録
-        // ==========================================
+        // DB設定モーダル
+        const dbConfigModal = document.getElementById('dbConfigModal');
+        function openDbConfigModal() {
+            const { url, key } = getActiveSupabaseConfig();
+            document.getElementById('inputSupabaseUrl').value = url;
+            document.getElementById('inputSupabaseKey').value = key;
+            dbConfigModal.classList.remove('hidden');
+        }
+        function closeDbConfigModal() {
+            dbConfigModal.classList.add('hidden');
+        }
+
+        document.getElementById('dbConfigForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('inputSupabaseUrl').value.trim();
+            const key = document.getElementById('inputSupabaseKey').value.trim();
+            if (!url || !key) {
+                showToast('Project URL と anon public key の両方を入力してください', 'error');
+                return;
+            }
+            localStorage.setItem(LOCAL_SB_URL_KEY, url);
+            localStorage.setItem(LOCAL_SB_KEY_KEY, key);
+            closeDbConfigModal();
+            showToast('Supabase設定を保存しました。接続中...');
+            await initSupabaseAndLoad();
+        };
+
+        document.getElementById('resetDbConfigBtn').onclick = async () => {
+            localStorage.removeItem(LOCAL_SB_URL_KEY);
+            localStorage.removeItem(LOCAL_SB_KEY_KEY);
+            document.getElementById('inputSupabaseUrl').value = '';
+            document.getElementById('inputSupabaseKey').value = '';
+            showToast('ローカル保存されたDB設定をクリアしました');
+            await initSupabaseAndLoad();
+        };
+
+        // イベントバインド
+        document.getElementById('openDbConfigBtn').onclick = openDbConfigModal;
+        document.getElementById('bannerOpenConfigBtn').onclick = openDbConfigModal;
+        document.getElementById('closeDbConfigBtn').onclick = closeDbConfigModal;
+        document.getElementById('cancelDbConfigBtn').onclick = closeDbConfigModal;
+        document.getElementById('copySqlBtn').onclick = () => {
+            copyTextSafe(document.getElementById('setupSqlCode').textContent, 'SQLをクリップボードにコピーしました！');
+        };
+
         document.getElementById('openUploadModalBtn').onclick = openUploadModal;
         document.getElementById('closeUploadModalBtn').onclick = closeUploadModal;
         document.getElementById('cancelUploadBtn').onclick = closeUploadModal;
         document.getElementById('closeDetailModalBtn').onclick = closeDetailModal;
         document.getElementById('downloadShmlBtn').onclick = handleDownloadPlugin;
-        document.getElementById('copyCodeBtn').onclick = copyCodeToClipboard;
-
-        document.getElementById('detailModal').onclick = (e) => {
-            if (e.target.id === 'detailModal') closeDetailModal();
-        };
-        document.getElementById('uploadModal').onclick = (e) => {
-            if (e.target.id === 'uploadModal') closeUploadModal();
+        document.getElementById('copyCodeBtn').onclick = () => {
+            if (selectedPlugin) copyTextSafe(selectedPlugin.code || '', 'スクリプトコードをコピーしました！');
         };
 
-        // 検索入力
+        document.getElementById('detailModal').onclick = (e) => { if (e.target.id === 'detailModal') closeDetailModal(); };
+        document.getElementById('uploadModal').onclick = (e) => { if (e.target.id === 'uploadModal') closeUploadModal(); };
+        document.getElementById('dbConfigModal').onclick = (e) => { if (e.target.id === 'dbConfigModal') closeDbConfigModal(); };
+
         searchInput.oninput = (e) => {
             searchQuery = e.target.value;
             clearSearchBtn.classList.toggle('hidden', !searchQuery);
@@ -1307,7 +1476,6 @@ __`
             renderPluginGrid();
         };
 
-        // 並べ替えボタン
         sortNewestBtn.onclick = () => {
             currentSort = 'newest';
             sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer';
@@ -1321,7 +1489,6 @@ __`
             renderPluginGrid();
         };
 
-        // ブロックフィルタボタン
         document.querySelectorAll('.block-filter-btn').forEach(btn => {
             btn.onclick = () => {
                 activeBlockFilter = btn.getAttribute('data-block');
@@ -1338,81 +1505,88 @@ __`
             };
         });
 
-        // ==========================================
-        // Firebase 初期化 ＆ パブリックリアルタイム同期
-        // ==========================================
-        async function initApp() {
-            if (!firebaseConfig) {
-                setConnectionStatus(false, 'ローカルプレビュー');
-                allPlugins = INITIAL_SEED_PLUGINS.map((p, idx) => ({ id: 'local-seed-' + idx, ...p }));
+        // =========================================================================
+        // Supabase 初期化＆リアルタイム購読
+        // =========================================================================
+        async function initSupabaseAndLoad() {
+            if (realtimeChannel && supabaseClient) {
+                await supabaseClient.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
+            supabaseClient = null;
+
+            const { url, key } = getActiveSupabaseConfig();
+
+            if (!url || !key || !window.supabase) {
+                setConnectionStatus(false, '⚠️ ローカルモード (DB未接続)');
+                allPlugins = loadLocalPlugins();
                 renderPluginGrid();
                 return;
             }
 
             try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+                supabaseClient = window.supabase.createClient(url, key);
 
-                // RULE 3: 必ず認証を先に完了させる
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                const { data, error } = await supabaseClient
+                    .from('shml_plugins')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                setConnectionStatus(true, '🌐 グローバル共有同期中 (Supabase)');
+
+                // テーブルが完全に空なら公式サンプル3種を downloads: 0 で初期シード
+                if (!data || data.length === 0) {
+                    const seedRows = INITIAL_SEED_PLUGINS.map(({ created_at, ...rest }) => rest);
+                    const { data: inserted, error: seedErr } = await supabaseClient
+                        .from('shml_plugins')
+                        .insert(seedRows)
+                        .select();
+                    if (!seedErr && inserted) {
+                        allPlugins = inserted;
+                    } else {
+                        allPlugins = [];
+                    }
                 } else {
-                    await signInAnonymously(auth);
+                    allPlugins = data;
                 }
 
-                currentUser = auth.currentUser;
-                onAuthStateChanged(auth, (u) => { currentUser = u; });
+                renderPluginGrid();
 
-                if (!currentUser) return;
-                setConnectionStatus(true, '🌐 グローバル共有同期中');
-
-                // RULE 1: パブリック共有コレクションパス
-                const pluginsCol = collection(db, 'artifacts', appId, 'public', 'data', 'shml_plugins');
-
-                // 初回起動時（データベースが空の場合のみ）に公式サンプル3種を downloads: 0 で自動登録
-                const initialSnap = await getDocs(pluginsCol);
-                if (initialSnap.empty) {
-                    for (const seed of INITIAL_SEED_PLUGINS) {
-                        await addDoc(pluginsCol, seed);
-                    }
-                }
-
-                // RULE 2: シンプルな collection() クエリで全件リアルタイム購読
-                onSnapshot(
-                    pluginsCol,
-                    (snapshot) => {
-                        const list = [];
-                        snapshot.forEach(docSnap => {
-                            list.push({ id: docSnap.id, ...docSnap.data() });
-                        });
-                        allPlugins = list;
-                        renderPluginGrid();
-
-                        // 詳細モーダル表示中ならダウンロード数をリアルタイム反映
-                        if (selectedPlugin) {
-                            const updated = allPlugins.find(p => p.id === selectedPlugin.id);
-                            if (updated) {
-                                selectedPlugin = updated;
-                                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(updated.downloads || 0).toLocaleString()}`;
+                // Postgres Realtime 購読（新規追加・DL数更新を全ユーザー間で即時反映）
+                realtimeChannel = supabaseClient
+                    .channel('public:shml_plugins')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'shml_plugins' }, (payload) => {
+                        if (payload.eventType === 'INSERT') {
+                            if (!allPlugins.some(p => p.id === payload.new.id)) {
+                                allPlugins.unshift(payload.new);
                             }
+                        } else if (payload.eventType === 'UPDATE') {
+                            const idx = allPlugins.findIndex(p => p.id === payload.new.id);
+                            if (idx !== -1) allPlugins[idx] = payload.new;
+                            if (selectedPlugin && selectedPlugin.id === payload.new.id) {
+                                selectedPlugin = payload.new;
+                                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(payload.new.downloads) || 0).toLocaleString()}`;
+                            }
+                        } else if (payload.eventType === 'DELETE') {
+                            allPlugins = allPlugins.filter(p => p.id !== payload.old.id);
                         }
-                    },
-                    (error) => {
-                        console.error('Firestore購読エラー:', error);
-                        setConnectionStatus(false, '同期エラー');
-                        showToast('データの同期中にエラーが発生しました', 'error');
-                    }
-                );
+                        renderPluginGrid();
+                    })
+                    .subscribe();
+
             } catch (err) {
-                console.error('初期化エラー:', err);
-                setConnectionStatus(false, 'オフラインモード');
-                allPlugins = INITIAL_SEED_PLUGINS.map((p, idx) => ({ id: 'local-seed-' + idx, ...p }));
+                console.error('Supabase接続エラー:', err);
+                supabaseClient = null;
+                setConnectionStatus(false, '⚠️ DB接続エラー (ローカル表示中)');
+                showToast('Supabase接続に失敗しました。SQLまたはURL/Keyを確認してください', 'error');
+                allPlugins = loadLocalPlugins();
                 renderPluginGrid();
             }
         }
 
-        initApp();
+        initSupabaseAndLoad();
     </script>
 </body>
 </html>
