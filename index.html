@@ -15,7 +15,6 @@
         .font-mono-code {
             font-family: 'JetBrains Mono', monospace;
         }
-        /* カスタムスクロールバー */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -37,8 +36,8 @@
         }
         .plugin-card:hover {
             transform: translateY(-3px);
-            border-color: #10b981;
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15);
+            border-color: #238636;
+            box-shadow: 0 10px 25px -5px rgba(35, 134, 54, 0.22);
         }
     </style>
 </head>
@@ -49,29 +48,29 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
             <!-- 左側：ロゴ＆サブタイトル -->
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#58a6ff] flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
                     🔌
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">
-                            YuJitsu <span class="text-[#10b981]">SHML Hub</span>
+                            🔌 YuJitsu <span class="text-[#58a6ff]">SHML Hub</span>
                         </h1>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-[#58a6ff] border border-sky-500/30">
-                            COMMUNITY
+                            PUBLIC STORE
                         </span>
                     </div>
-                    <p class="text-xs text-gray-400">ThumbnailMaker Pro 専用 .shml プラグイン共有コミュニティ</p>
+                    <p class="text-xs text-gray-400">ThumbnailMaker Pro プラグイン共有コミュニティ</p>
                 </div>
             </div>
 
-            <!-- 右端：アップロードボタン -->
+            <!-- 右側：グローバル同期ステータス＆アップロードボタン -->
             <div class="flex items-center gap-2.5 ml-auto">
-                <span id="connectionStatus" class="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-gray-400 bg-[#0d1117] px-2.5 py-1.5 rounded-lg border border-[#30363d]">
+                <span id="connectionStatus" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 bg-[#0d1117] px-3 py-1.5 rounded-xl border border-[#30363d]">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
-                    <span id="statusText">接続中...</span>
+                    <span id="statusText">接続準備中...</span>
                 </span>
-                <button id="openUploadModalBtn" class="bg-[#10b981] hover:bg-emerald-400 active:scale-[0.98] text-[#0d1117] font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+                <button id="openUploadModalBtn" class="bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-500/40 transition flex items-center gap-2 cursor-pointer">
                     <span>📤</span>
                     <span>ファイルをアップロード</span>
                 </button>
@@ -80,29 +79,29 @@
     </header>
 
     <!-- メインコンテンツ -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-        <!-- 検索・並べ替えコントロールバー -->
-        <section class="bg-[#161b22] border border-[#30363d] rounded-2xl p-4 shadow-md">
+        <!-- コントロールバー（検索・並べ替え・ブロックフィルタ） -->
+        <section class="bg-[#161b22] border border-[#30363d] rounded-2xl p-4 shadow-md space-y-3.5">
             <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-                <!-- 検索入力 -->
+                <!-- 検索ボックス -->
                 <div class="relative flex-1">
                     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
                     <input
                         type="text"
                         id="searchInput"
-                        placeholder="プラグイン名・概要・作者名・タグ ([change], [javascript] など) で検索..."
+                        placeholder="タイトル・作者名・概要・SHMLブロックタグでリアルタイム検索..."
                         class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl pl-10 pr-9 py-2.5 text-sm text-white placeholder-gray-500 transition"
                     >
-                    <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs px-1.5 py-0.5 rounded">
+                    <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs px-1.5 py-0.5 rounded cursor-pointer">
                         ✕
                     </button>
                 </div>
 
-                <!-- 並べ替えボタン＆件数 -->
+                <!-- 並べ替えボタン＆公開件数 -->
                 <div class="flex flex-wrap items-center justify-between md:justify-end gap-2">
                     <div class="inline-flex bg-[#0d1117] p-1 rounded-xl border border-[#30363d]">
-                        <button id="sortNewestBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#10b981] text-[#0d1117] cursor-pointer">
+                        <button id="sortNewestBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer">
                             🆕 新着順
                         </button>
                         <button id="sortPopularBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer">
@@ -110,35 +109,63 @@
                         </button>
                     </div>
                     <div class="text-xs text-gray-400 bg-[#0d1117] px-3 py-2 rounded-xl border border-[#30363d]">
-                        公開中: <span id="pluginCountLabel" class="font-bold text-[#58a6ff]">0</span> 件
+                        表示中: <span id="pluginCountLabel" class="font-bold text-[#58a6ff]">0</span> 件
                     </div>
+                </div>
+            </div>
+
+            <!-- ブロックフィルタタグ -->
+            <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[#30363d]/70">
+                <span class="text-[11px] text-gray-400 mr-1 font-bold">ブロック絞り込み:</span>
+                <div id="blockFilterGroup" class="flex flex-wrap gap-1.5">
+                    <button data-block="all" class="block-filter-btn active px-2.5 py-1 rounded-lg text-xs font-bold border transition bg-[#58a6ff] text-[#0d1117] border-[#58a6ff] cursor-pointer">
+                        すべて
+                    </button>
+                    <button data-block="[change]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
+                        [change]
+                    </button>
+                    <button data-block="[javascript]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
+                        [javascript]
+                    </button>
+                    <button data-block="[html]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
+                        [html]
+                    </button>
+                    <button data-block="[python]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
+                        [python]
+                    </button>
+                    <button data-block="[java]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
+                        [java]
+                    </button>
+                    <button data-block="[php]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
+                        [php]
+                    </button>
                 </div>
             </div>
         </section>
 
         <!-- ローディング表示 -->
         <div id="loadingState" class="py-20 text-center space-y-3">
-            <div class="inline-block w-8 h-8 border-4 border-[#30363d] border-t-[#10b981] rounded-full animate-spin"></div>
-            <p class="text-sm text-gray-400">コミュニティのプラグインを読み込んでいます...</p>
+            <div class="inline-block w-8 h-8 border-4 border-[#30363d] border-t-[#238636] rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-400">グローバル共有データベースと同期中...</p>
         </div>
 
         <!-- 検索結果0件表示 -->
         <div id="emptyState" class="hidden py-20 text-center bg-[#161b22] border border-[#30363d] rounded-2xl p-6 space-y-2">
             <div class="text-4xl">🔎</div>
             <h3 class="text-base font-bold text-white">条件に一致する .shml プラグインが見つかりませんでした</h3>
-            <p class="text-xs text-gray-400">別のキーワードで検索するか、右上のボタンから新しいプラグインを投稿してみましょう！</p>
+            <p class="text-xs text-gray-400">検索条件やブロックフィルタを変更するか、右上のボタンから新しいプラグインを公開しましょう！</p>
         </div>
 
-        <!-- プラグイン一覧グリッド -->
+        <!-- ホーム一覧（グリッドカード表示） -->
         <section id="pluginGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden">
-            <!-- JSでカード生成 -->
+            <!-- JSで動的生成 -->
         </section>
 
     </main>
 
     <!-- フッター -->
     <footer class="border-t border-[#30363d] bg-[#161b22] py-4 px-4 text-center text-xs text-gray-500">
-        YuJitsu SHML Hub — ThumbnailMaker Pro v2.9+ 対応コミュニティ拡張ストア
+        YuJitsu SHML Hub — ThumbnailMaker Pro プラグイン共有コミュニティ
     </footer>
 
     <!-- ========================================== -->
@@ -148,21 +175,21 @@
         <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <!-- モーダルヘッダー -->
             <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-start justify-between gap-4">
-                <div class="space-y-1 min-w-0">
+                <div class="space-y-1.5 min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span id="detailFileNameBadge" class="text-[11px] font-mono-code bg-emerald-500/15 text-[#10b981] border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                        <span id="detailFileNameBadge" class="text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg">
                             plugin.shml
                         </span>
-                        <span id="detailDownloadsBadge" class="text-[11px] font-bold bg-sky-500/15 text-[#58a6ff] border border-sky-500/30 px-2 py-0.5 rounded-md">
-                            ⬇️ 0 DL
+                        <span id="detailDownloadsBadge" class="text-[11px] font-extrabold bg-sky-500/15 text-[#58a6ff] border border-sky-500/30 px-2.5 py-0.5 rounded-lg">
+                            ⬇️ 0
                         </span>
                     </div>
                     <h2 id="detailTitle" class="text-lg sm:text-xl font-extrabold text-white break-words">
                         プラグインタイトル
                     </h2>
                     <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                        <span>👤 作者: <strong id="detailAuthor" class="text-gray-200">匿名クリエイター</strong></span>
-                        <span>🕒 投稿日: <span id="detailDate">2026/01/01</span></span>
+                        <span>👤 作者: <strong id="detailAuthor" class="text-gray-200">名無しクリエイター</strong></span>
+                        <span>🕒 投稿日時: <span id="detailDate">2026/01/01 00:00</span></span>
                     </div>
                 </div>
                 <button id="closeDetailModalBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer flex-none">
@@ -172,20 +199,23 @@
 
             <!-- モーダル本文 -->
             <div class="p-5 overflow-y-auto space-y-5 flex-1">
-                <!-- 検出ブロックタグ -->
-                <div id="detailTagsRow" class="flex flex-wrap gap-1.5"></div>
+                <!-- 使用されているSHMLブロック一覧 -->
+                <div class="space-y-1.5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">🧩 使用されているSHMLブロック</h3>
+                    <div id="detailTagsRow" class="flex flex-wrap gap-1.5"></div>
+                </div>
 
-                <!-- 概要・使い方 -->
+                <!-- 全文概要 -->
                 <div class="space-y-1.5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-[#58a6ff]">📖 概要・使い方</h3>
                     <div id="detailDescription" class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed"></div>
                 </div>
 
-                <!-- SHMLソースコードプレビュー -->
+                <!-- .shml スクリプトコードプレビュー -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#10b981]">💻 .shml スクリプト内容プレビュー</h3>
-                        <button id="copyCodeBtn" class="text-xs bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-3 py-1 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">💻 .shml スクリプトコード</h3>
+                        <button id="copyCodeBtn" class="text-xs bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-3 py-1.5 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5">
                             <span>📋</span>
                             <span>コードをコピー</span>
                         </button>
@@ -194,12 +224,12 @@
                 </div>
             </div>
 
-            <!-- モーダルフッター（ダウンロードアクション） -->
+            <!-- モーダルフッター -->
             <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p class="text-[11px] text-gray-400">
-                    ※ ThumbnailMaker Pro 右上の「🔌 プラグイン (.shml) 読込」から読み込んで使用します
+                    ※ ThumbnailMaker Pro 右上の「🔌 プラグイン (.shml) 読込」から適用できます
                 </p>
-                <button id="downloadShmlBtn" class="w-full sm:w-auto bg-[#10b981] hover:bg-emerald-400 active:scale-[0.98] text-[#0d1117] font-extrabold text-sm px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                <button id="downloadShmlBtn" class="w-full sm:w-auto bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-sm px-6 py-2.5 rounded-xl shadow-lg border border-emerald-500/40 transition flex items-center justify-center gap-2 cursor-pointer">
                     <span>⬇️</span>
                     <span>.shml ファイルをダウンロード</span>
                 </button>
@@ -216,7 +246,7 @@
             <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">📤</span>
-                    <h2 class="text-base sm:text-lg font-extrabold text-white">新しい .shml プラグインを公開</h2>
+                    <h2 class="text-base sm:text-lg font-extrabold text-white">新規 .shml プラグインを公開</h2>
                 </div>
                 <button id="closeUploadModalBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer">
                     ✕
@@ -230,7 +260,7 @@
                     <label class="block text-xs font-bold text-gray-300 mb-1.5">
                         1. プラグインファイル (.shml / .txt) <span class="text-rose-400">*</span>
                     </label>
-                    <div id="dropZone" class="border-2 border-dashed border-[#30363d] hover:border-[#10b981] bg-[#0d1117] rounded-xl p-5 text-center transition cursor-pointer">
+                    <div id="dropZone" class="border-2 border-dashed border-[#30363d] hover:border-[#238636] bg-[#0d1117] rounded-xl p-5 text-center transition cursor-pointer">
                         <input type="file" id="shmlUploadInput" accept=".shml,.txt" class="hidden">
                         <div id="dropZoneDefault" class="space-y-1">
                             <div class="text-2xl">📄</div>
@@ -239,7 +269,7 @@
                         </div>
                         <div id="dropZoneSelected" class="hidden space-y-1">
                             <div class="text-2xl">✅</div>
-                            <p id="selectedFileName" class="text-sm font-bold text-[#10b981] font-mono-code"></p>
+                            <p id="selectedFileName" class="text-sm font-bold text-emerald-400 font-mono-code"></p>
                             <p id="selectedFileMeta" class="text-[11px] text-gray-400"></p>
                         </div>
                     </div>
@@ -268,7 +298,7 @@
                             type="text"
                             id="uploadAuthor"
                             maxlength="30"
-                            placeholder="未入力時は「匿名クリエイター」"
+                            placeholder="未入力時は「名無しクリエイター」"
                             class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
                         >
                     </div>
@@ -283,17 +313,17 @@
                         id="uploadDescription"
                         required
                         rows="4"
-                        maxlength="1000"
-                        placeholder="このプラグインで追加される機能や、ThumbnailMaker上での操作手順を書いてください。"
+                        maxlength="1200"
+                        placeholder="プラグインで追加される機能や操作手順を詳しく記入してください。"
                         class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white leading-relaxed"
                     ></textarea>
                 </div>
 
-                <!-- 読み込んだスクリプトのプレビュー -->
-                <div id="uploadPreviewBox" class="hidden space-y-1">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-gray-400">読み込まれたコード内容（先頭プレビュー）</span>
-                        <div id="uploadDetectedTags" class="flex gap-1"></div>
+                <!-- 自動検出ブロック＆コードプレビュー -->
+                <div id="uploadPreviewBox" class="hidden space-y-1.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-[11px] font-bold text-gray-400">自動検出されたSHMLブロック:</span>
+                        <div id="uploadDetectedTags" class="flex flex-wrap gap-1"></div>
                     </div>
                     <pre id="uploadCodePreview" class="bg-[#010409] border border-[#30363d] rounded-xl p-3 text-[11px] font-mono-code text-emerald-300 max-h-28 overflow-y-auto"></pre>
                 </div>
@@ -304,34 +334,34 @@
                 <button type="button" id="cancelUploadBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white bg-[#161b22] border border-[#30363d] cursor-pointer">
                     キャンセル
                 </button>
-                <button type="submit" form="uploadForm" id="submitUploadBtn" class="bg-[#10b981] hover:bg-emerald-400 disabled:opacity-50 text-[#0d1117] font-extrabold text-xs sm:text-sm px-5 py-2 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                <button type="submit" form="uploadForm" id="submitUploadBtn" class="bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm px-5 py-2 rounded-xl shadow-lg border border-emerald-500/40 transition flex items-center gap-1.5 cursor-pointer">
                     <span>🚀</span>
-                    <span>ホームに公開する</span>
+                    <span>コミュニティに公開する</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- カスタムトースト通知（alert()不使用） -->
+    <!-- カスタムトースト通知 -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Firebase SDK & アプリケーションロジック -->
+    <!-- Firebase SDK & グローバル同期ロジック -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, onSnapshot, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 環境グローバル変数の取得
+        // 環境グローバル変数
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'yujitsu-shml-hub';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
 
-        // トースト通知ヘルパー
+        // トースト通知
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             const colors = type === 'error'
                 ? 'bg-rose-950/95 border-rose-500 text-rose-200'
-                : 'bg-[#161b22]/95 border-[#10b981] text-emerald-200';
+                : 'bg-[#161b22]/95 border-[#238636] text-emerald-200';
             toast.className = `pointer-events-auto border px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 ${colors}`;
             toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✨'}</span><span>${escapeHtml(message)}</span>`;
             container.appendChild(toast);
@@ -355,7 +385,7 @@
                 .replace(/'/g, '&#039;');
         }
 
-        // SHMLスクリプト内のブロックタグ自動検出
+        // SHMLブロック自動検出
         function detectShmlBlocks(content) {
             const found = new Set();
             const regex = /^\s*\[(change|javascript|js|html|python|py|java|php)\]/gim;
@@ -382,16 +412,16 @@
         }
 
         // ==========================================
-        // 初期シードデータ（3つの実用 .shml プラグイン・すべて 0 DL スタート）
+        // 公式サンプル3種（初期DL数はすべて 0 スタート）
         // ==========================================
         const INITIAL_SEED_PLUGINS = [
             {
-                title: '💬 吹き出しジェネレーター (図形変形対応)',
+                title: '💬 吹き出しジェネレーター（緑●変形対応）',
                 author: 'YuJitsu Dev',
-                description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（上下左右・斜め・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接マウスドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
+                description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（左下・下・右下・左上・上・右上・左・右・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接ドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
                 fileName: 'speech_bubble.shml',
                 downloads: 0,
-                createdAt: Date.now() - 1000 * 60 * 60 * 5,
+                createdAt: Date.now() - 1000 * 60 * 30,
                 content: `[change]
 # レイヤー追加パネルに「💬 吹き出しを追加」ボタンを追加
 (+"59")-("💬 吹き出しを追加","{button}")-{button}:<add_speech_bubble>
@@ -512,18 +542,88 @@ _
       ctx.beginPath();
       for (let i = 0; i < spikes * 2; i++) {
         const angle = (i * Math.PI) / spikes;
-        const rScale = i % 2 === 0 ? 1.08 : 0.80;
-        ctx.lineTo(Math.cos(angle) * rx * rScale, Math.sin(angle) * ry * rScale);
+        const isOuter = i % 2 === 0;
+        const rScale = isOuter ? 1.08 : 0.80;
+        let extra = 1.0;
+        if (isOuter && tail !== 'none') {
+          const deg = ((angle * 180) / Math.PI + 360) % 360;
+          if (tail === 'bottom-right' && deg > 30 && deg < 65) extra = 1.32;
+          if (tail === 'bottom-center' && deg > 75 && deg < 105) extra = 1.32;
+          if (tail === 'bottom-left' && deg > 115 && deg < 150) extra = 1.32;
+          if (tail === 'left' && deg > 165 && deg < 195) extra = 1.32;
+          if (tail === 'top-left' && deg > 210 && deg < 245) extra = 1.32;
+          if (tail === 'top-center' && deg > 255 && deg < 285) extra = 1.32;
+          if (tail === 'top-right' && deg > 295 && deg < 330) extra = 1.32;
+          if (tail === 'right' && (deg > 345 || deg < 15)) extra = 1.32;
+        }
+        const px = Math.cos(angle) * rx * rScale * extra;
+        const py = Math.sin(angle) * ry * rScale * extra;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.closePath(); ctx.fill(); if (lineWidth > 0) ctx.stroke();
-    } else if (style === 'oval' || style === 'cloud') {
-      ctx.beginPath();
-      ctx.ellipse(0, 0, bw / 2, bh / 2, 0, 0, Math.PI * 2);
-      ctx.fill(); if (lineWidth > 0) ctx.stroke();
+    } else if (style === 'cloud') {
+      const pad = 160, offW = Math.ceil(bw + pad * 2), offH = Math.ceil(bh + pad * 2);
+      const off = document.createElement('canvas'); off.width = offW; off.height = offH;
+      const octx = off.getContext('2d'), ocx = offW / 2, ocy = offH / 2;
+      const bumps = 14, rx = Math.max(20, bw / 2 - 20), ry = Math.max(15, bh / 2 - 20);
+      const bumpR = Math.max(22, Math.min(rx, ry) * 0.48);
+      if (lineWidth > 0) {
+        octx.fillStyle = stroke;
+        for (let i = 0; i < bumps; i++) {
+          const a = (i / bumps) * Math.PI * 2;
+          octx.beginPath(); octx.arc(ocx + Math.cos(a) * rx, ocy + Math.sin(a) * ry, bumpR + lineWidth, 0, Math.PI * 2); octx.fill();
+        }
+        octx.beginPath(); octx.ellipse(ocx, ocy, rx + lineWidth, ry + lineWidth, 0, 0, Math.PI * 2); octx.fill();
+      }
+      octx.fillStyle = fill;
+      for (let i = 0; i < bumps; i++) {
+        const a = (i / bumps) * Math.PI * 2;
+        octx.beginPath(); octx.arc(ocx + Math.cos(a) * rx, ocy + Math.sin(a) * ry, bumpR, 0, Math.PI * 2); octx.fill();
+      }
+      octx.beginPath(); octx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2); octx.fill();
+      if (tail !== 'none') {
+        const dxMap = { 'bottom-left': -bw * 0.25, 'bottom-center': 0, 'bottom-right': bw * 0.25, 'top-left': -bw * 0.25, 'top-center': 0, 'top-right': bw * 0.25, 'left': -(bw / 2 + 32), 'right': bw / 2 + 32 };
+        const dyMap = { 'bottom-left': bh / 2 + 32, 'bottom-center': bh / 2 + 36, 'bottom-right': bh / 2 + 32, 'top-left': -(bh / 2 + 32), 'top-center': -(bh / 2 + 36), 'top-right': -(bh / 2 + 32), 'left': 0, 'right': 0 };
+        const dx = dxMap[tail] || 0, dy = dyMap[tail] || (bh / 2 + 36);
+        [{ t: 1.0, r: 16 }, { t: 1.25, r: 10 }].forEach(d => {
+          const tx = ocx + dx * d.t, ty = ocy + dy * d.t;
+          if (lineWidth > 0) { octx.fillStyle = stroke; octx.beginPath(); octx.arc(tx, ty, d.r + lineWidth, 0, Math.PI * 2); octx.fill(); }
+          octx.fillStyle = fill; octx.beginPath(); octx.arc(tx, ty, d.r, 0, Math.PI * 2); octx.fill();
+        });
+      }
+      ctx.drawImage(off, -offW / 2, -offH / 2);
+    } else if (style === 'oval') {
+      const pad = 120, offW = Math.ceil(bw + pad * 2), offH = Math.ceil(bh + pad * 2);
+      const off = document.createElement('canvas'); off.width = offW; off.height = offH;
+      const octx = off.getContext('2d'); octx.lineJoin = 'round';
+      const ocx = offW / 2, ocy = offH / 2, rx = bw / 2, ry = bh / 2, th = Math.min(55, Math.max(28, bh * 0.25));
+      const drawOvalPass = (isStroke) => {
+        octx.fillStyle = isStroke ? stroke : fill; octx.strokeStyle = stroke; octx.lineWidth = isStroke ? lineWidth * 2 : 0;
+        if (tail !== 'none') {
+          const tailMap = {
+            'bottom-left': [[ocx - rx * 0.45, ocy + ry * 0.6], [ocx - rx * 0.15, ocy + ry * 0.75], [ocx - rx * 0.6, ocy + ry + th]],
+            'bottom-center': [[ocx - rx * 0.18, ocy + ry * 0.75], [ocx + rx * 0.18, ocy + ry * 0.75], [ocx, ocy + ry + th]],
+            'bottom-right': [[ocx + rx * 0.15, ocy + ry * 0.75], [ocx + rx * 0.45, ocy + ry * 0.6], [ocx + rx * 0.6, ocy + ry + th]],
+            'top-left': [[ocx - rx * 0.45, ocy - ry * 0.6], [ocx - rx * 0.15, ocy - ry * 0.75], [ocx - rx * 0.6, ocy - ry - th]],
+            'top-center': [[ocx - rx * 0.18, ocy - ry * 0.75], [ocx + rx * 0.18, ocy - ry * 0.75], [ocx, ocy - ry - th]],
+            'top-right': [[ocx + rx * 0.15, ocy - ry * 0.75], [ocx + rx * 0.45, ocy - ry * 0.6], [ocx + rx * 0.6, ocy - ry - th]],
+            'left': [[ocx - rx * 0.75, ocy - ry * 0.22], [ocx - rx * 0.75, ocy + ry * 0.22], [ocx - rx - th, ocy]],
+            'right': [[ocx + rx * 0.75, ocy - ry * 0.22], [ocx + rx * 0.75, ocy + ry * 0.22], [ocx + rx + th, ocy]]
+          };
+          const pts = tailMap[tail];
+          if (pts) { octx.beginPath(); octx.moveTo(pts[0][0], pts[0][1]); octx.lineTo(pts[2][0], pts[2][1]); octx.lineTo(pts[1][0], pts[1][1]); octx.closePath(); if (isStroke) octx.stroke(); octx.fill(); }
+        }
+        octx.beginPath(); octx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2); if (isStroke) octx.stroke(); octx.fill();
+      };
+      if (lineWidth > 0) drawOvalPass(true);
+      drawOvalPass(false);
+      ctx.drawImage(off, -offW / 2, -offH / 2);
     } else {
       ctx.beginPath();
       ctx.moveTo(bx + r, by);
-      if (tail === 'top-center') { ctx.lineTo(-tw / 2, by); ctx.lineTo(0, by - th); ctx.lineTo(tw / 2, by); }
+      if (tail === 'top-left') { ctx.lineTo(bx + offsetSide, by); ctx.lineTo(bx + offsetSide - 10, by - th); ctx.lineTo(bx + offsetSide + tw, by); }
+      else if (tail === 'top-center') { ctx.lineTo(-tw / 2, by); ctx.lineTo(0, by - th); ctx.lineTo(tw / 2, by); }
+      else if (tail === 'top-right') { ctx.lineTo(bx + bw - offsetSide - tw, by); ctx.lineTo(bx + bw - offsetSide + 10, by - th); ctx.lineTo(bx + bw - offsetSide, by); }
       ctx.lineTo(bx + bw - r, by);
       if (r > 0) ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
       if (tail === 'right') { ctx.lineTo(bx + bw, -tw / 2); ctx.lineTo(bx + bw + th, 0); ctx.lineTo(bx + bw, tw / 2); }
@@ -565,10 +665,70 @@ _
       const panel = document.getElementById('speechBubbleInspector');
       if (!panel) return;
       if (layer && layer.type === 'speechBubble') {
-        document.getElementById('inspectorTitle').innerText = '💬 吹き出しプロパティ';
+        document.getElementById('inspectorTitle').innerText = '💬 吹き出しプロパティ (●変形)';
         panel.classList.remove('hidden');
+        document.getElementById('sbStyle').value = layer.sbStyle || 'round';
+        document.getElementById('sbTail').value = layer.sbTail || 'bottom-left';
+        document.getElementById('sbW').value = layer.bw || 460;
+        document.getElementById('sbWVal').innerText = layer.bw || 460;
+        document.getElementById('sbH').value = layer.bh || 240;
+        document.getElementById('sbHVal').innerText = layer.bh || 240;
+        document.getElementById('sbFill').value = layer.fillColor || '#ffffff';
+        document.getElementById('sbStroke').value = layer.strokeColor || '#000000';
+        document.getElementById('sbLine').value = layer.lineWidth !== undefined ? layer.lineWidth : 8;
+        document.getElementById('sbLineVal').innerText = layer.lineWidth !== undefined ? layer.lineWidth : 8;
+        document.getElementById('sbShadow').checked = layer.hasShadow !== false;
       } else { panel.classList.add('hidden'); }
     };
+
+    const mainCvs = document.getElementById('mainCanvas');
+    if (mainCvs) {
+      let dragHandle = null, dragStart = null;
+      const getPos = (e) => {
+        const rect = mainCvs.getBoundingClientRect();
+        return { x: (e.clientX - rect.left) * (mainCvs.width / rect.width), y: (e.clientY - rect.top) * (mainCvs.height / rect.height) };
+      };
+      mainCvs.addEventListener('mousedown', (e) => {
+        const pos = getPos(e);
+        if (activeLayer && activeLayer.type === 'speechBubble') {
+          const loc = toSbLocal(activeLayer, pos.x, pos.y);
+          for (const h of getSbHandles(activeLayer.bw || 460, activeLayer.bh || 240)) {
+            if (Math.hypot(loc.x - h.x, loc.y - h.y) <= 18) {
+              dragHandle = h.id;
+              dragStart = { x: pos.x, y: pos.y, bw: activeLayer.bw || 460, bh: activeLayer.bh || 240 };
+              e.stopImmediatePropagation(); e.preventDefault(); return;
+            }
+          }
+        }
+        for (let i = layers.length - 1; i >= 0; i--) {
+          const l = layers[i];
+          if (l.type === 'speechBubble') {
+            const loc = toSbLocal(l, pos.x, pos.y);
+            if (Math.abs(loc.x) <= (l.bw || 460) / 2 && Math.abs(loc.y) <= (l.bh || 240) / 2) { selectLayer(l); break; }
+          }
+        }
+      }, true);
+      window.addEventListener('mousemove', (e) => {
+        if (!dragHandle || !dragStart || !activeLayer || activeLayer.type !== 'speechBubble') return;
+        const pos = getPos(e);
+        const rad = -((activeLayer.rotation || 0) * Math.PI) / 180;
+        const dxRaw = pos.x - dragStart.x, dyRaw = pos.y - dragStart.y;
+        const dx = dxRaw * Math.cos(rad) - dyRaw * Math.sin(rad);
+        const dy = dxRaw * Math.sin(rad) + dyRaw * Math.cos(rad);
+        let newW = dragStart.bw, newH = dragStart.bh;
+        if (dragHandle.includes('e')) newW = Math.max(80, Math.round(dragStart.bw + dx * 2));
+        if (dragHandle.includes('w')) newW = Math.max(80, Math.round(dragStart.bw - dx * 2));
+        if (dragHandle.includes('s')) newH = Math.max(50, Math.round(dragStart.bh + dy * 2));
+        if (dragHandle.includes('n')) newH = Math.max(50, Math.round(dragStart.bh - dy * 2));
+        activeLayer.bw = newW; activeLayer.bh = newH;
+        const wInput = document.getElementById('sbW'), hInput = document.getElementById('sbH');
+        if (wInput) { wInput.value = newW; document.getElementById('sbWVal').innerText = newW; }
+        if (hInput) { hInput.value = newH; document.getElementById('sbHVal').innerText = newH; }
+        render();
+      });
+      window.addEventListener('mouseup', () => { dragHandle = null; dragStart = null; });
+    }
+
     document.getElementById('sbStyle').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.sbStyle = e.target.value; render(); } };
     document.getElementById('sbTail').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.sbTail = e.target.value; render(); } };
     document.getElementById('sbW').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.bw = +e.target.value; document.getElementById('sbWVal').innerText = activeLayer.bw; render(); } };
@@ -580,8 +740,9 @@ _
   }
 
   onShmlAction('add_speech_bubble', () => {
+    const count = layers.filter(l => l.type === 'speechBubble').length + 1;
     const layer = {
-      id: Date.now(), type: 'speechBubble', name: '💬 吹き出し',
+      id: Date.now(), type: 'speechBubble', name: \`💬 吹き出し (\${count})\`,
       x: 640, y: 360, bw: 460, bh: 240, rotation: 0, opacity: 100,
       sbStyle: 'round', sbTail: 'bottom-left', fillColor: '#ffffff', strokeColor: '#000000', lineWidth: 8, hasShadow: true
     };
@@ -596,7 +757,7 @@ __`
                 description: 'サムネイルに迫力を出すマンガ風「集中線」レイヤーを追加できる公式プラグインです。\n\n【主な機能】\n・集中線の色、線の太さ、本数（密度）、中心の余白サイズをスライダーでリアルタイム調整\n・中心のオレンジターゲットをドラッグして、注目させたいキャラや文字に中心点を自由に移動可能\n・レイヤーの「上へ・下へ」ボタンで背景と文字の間に挟むこともできます！',
                 fileName: 'shuuchuusenn.shml',
                 downloads: 0,
-                createdAt: Date.now() - 1000 * 60 * 60 * 24,
+                createdAt: Date.now() - 1000 * 60 * 60 * 2,
                 content: `[change]
 # レイヤー追加パネルに「⚡ 集中線を追加」ボタンを追加
 (+"59")-("⚡ 集中線を追加","{button}")-{button}:<add_focus_lines>
@@ -690,19 +851,20 @@ _
   }
 
   onShmlAction('add_focus_lines', () => {
-    const layer = { id: Date.now(), type: 'focusLines', name: '⚡ 集中線', x: 640, y: 360, rotation: 0, opacity: 100, color: '#ffffff', thickness: 8, density: 80, innerRadius: 260 };
+    const count = layers.filter(l => l.type === 'focusLines').length + 1;
+    const layer = { id: Date.now(), type: 'focusLines', name: \`⚡ 集中線 (\${count})\`, x: 640, y: 360, rotation: 0, opacity: 100, color: '#ffffff', thickness: 8, density: 80, innerRadius: 260 };
     layers.push(layer); selectLayer(layer);
   });
 })();
 __`
             },
             {
-                title: '↔️ テキスト＆画像 左右・上下反転',
+                title: '↔️ レイヤー左右・上下反転',
                 author: 'YuJitsu Dev',
                 description: '選択中のテキストレイヤーやサブ画像レイヤーをワンクリックで「↔️ 左右反転」「↕️ 上下反転」できる軽量ユーティリティプラグインです。\n\n立ち絵イラストの向きを変えたい時や、鏡文字エフェクトを作りたい時に超便利です！',
                 fileName: 'hanntenn.shml',
                 downloads: 0,
-                createdAt: Date.now() - 1000 * 60 * 60 * 48,
+                createdAt: Date.now() - 1000 * 60 * 60 * 6,
                 content: `[html]
 ("1~20"):{
 <div id="shmlFlipControls" class="grid grid-cols-2 gap-1.5 mt-1.5 hidden">
@@ -781,14 +943,15 @@ __`
         // アプリ状態
         let allPlugins = [];
         let currentSort = 'newest'; // 'newest' | 'popular'
+        let activeBlockFilter = 'all';
         let searchQuery = '';
         let selectedPlugin = null;
-        let uploadedFileObj = null; // { name, content }
+        let uploadedFileObj = null;
         let db = null;
         let auth = null;
         let currentUser = null;
 
-        // UI要素
+        // DOM要素
         const pluginGrid = document.getElementById('pluginGrid');
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
@@ -798,15 +961,13 @@ __`
         const sortNewestBtn = document.getElementById('sortNewestBtn');
         const sortPopularBtn = document.getElementById('sortPopularBtn');
 
-        // 接続ステータス表示更新
         function setConnectionStatus(online, text) {
             const dot = document.getElementById('statusDot');
             const label = document.getElementById('statusText');
-            dot.className = `w-2 h-2 rounded-full ${online ? 'bg-[#10b981]' : 'bg-amber-400'}`;
+            dot.className = `w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
             label.textContent = text;
         }
 
-        // 日付フォーマット
         function formatDate(ts) {
             if (!ts) return '不明';
             const d = new Date(ts);
@@ -818,19 +979,23 @@ __`
             return `${y}/${m}/${day} ${hh}:${mm}`;
         }
 
-        // 一覧のフィルタリング＆並べ替え＆描画
+        // 一覧のフィルタリング・ソート・描画
         function renderPluginGrid() {
             const q = searchQuery.trim().toLowerCase();
 
             let filtered = allPlugins.filter(p => {
+                const blocks = detectShmlBlocks(p.content || '');
+                if (activeBlockFilter !== 'all' && !blocks.includes(activeBlockFilter)) {
+                    return false;
+                }
                 if (!q) return true;
-                const blocks = detectShmlBlocks(p.content || '').join(' ').toLowerCase();
+                const blocksStr = blocks.join(' ').toLowerCase();
                 return (
                     (p.title || '').toLowerCase().includes(q) ||
                     (p.description || '').toLowerCase().includes(q) ||
                     (p.author || '').toLowerCase().includes(q) ||
                     (p.fileName || '').toLowerCase().includes(q) ||
-                    blocks.includes(q)
+                    blocksStr.includes(q)
                 );
             });
 
@@ -865,7 +1030,7 @@ __`
                 card.innerHTML = `
                     <div class="space-y-3">
                         <div class="flex items-start justify-between gap-2">
-                            <span class="text-[11px] font-mono-code text-gray-400 bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] truncate max-w-[65%]">
+                            <span class="text-[11px] font-mono-code text-gray-400 bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] truncate max-w-[68%]">
                                 📄 ${escapeHtml(plugin.fileName || 'plugin.shml')}
                             </span>
                             <span class="text-xs font-extrabold text-[#58a6ff] bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-lg flex-none">
@@ -888,7 +1053,7 @@ __`
                     </div>
 
                     <div class="pt-3 border-t border-[#30363d] flex items-center justify-between text-[11px] text-gray-400">
-                        <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '匿名クリエイター')}</span>
+                        <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '名無しクリエイター')}</span>
                         <span>${formatDate(plugin.createdAt)}</span>
                     </div>
                 `;
@@ -902,18 +1067,18 @@ __`
         function openDetailModal(plugin) {
             selectedPlugin = plugin;
             document.getElementById('detailFileNameBadge').textContent = `📄 ${plugin.fileName || 'plugin.shml'}`;
-            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(plugin.downloads || 0).toLocaleString()} DL`;
+            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(plugin.downloads || 0).toLocaleString()}`;
             document.getElementById('detailTitle').textContent = plugin.title;
-            document.getElementById('detailAuthor').textContent = plugin.author || '匿名クリエイター';
+            document.getElementById('detailAuthor').textContent = plugin.author || '名無しクリエイター';
             document.getElementById('detailDate').textContent = formatDate(plugin.createdAt);
             document.getElementById('detailDescription').textContent = plugin.description;
             document.getElementById('detailCodePreview').textContent = plugin.content;
 
             const blocks = detectShmlBlocks(plugin.content || '');
             const tagsRow = document.getElementById('detailTagsRow');
-            tagsRow.innerHTML = blocks.map(tag =>
-                `<span class="text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`
-            ).join('');
+            tagsRow.innerHTML = blocks.length > 0
+                ? blocks.map(tag => `<span class="text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
+                : `<span class="text-[11px] font-mono-code px-2.5 py-0.5 rounded-md border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
 
             document.getElementById('detailModal').classList.remove('hidden');
         }
@@ -923,12 +1088,11 @@ __`
             selectedPlugin = null;
         }
 
-        // .shml ファイルダウンロード処理＆カウントアップ
+        // .shml ファイルダウンロード＆データベース上の downloads を increment(1)
         async function handleDownloadPlugin() {
             if (!selectedPlugin) return;
             const plugin = selectedPlugin;
 
-            // 拡張子を .shml に統一してUTF-8でダウンロード
             let dlName = (plugin.fileName || 'plugin.shml').trim();
             if (!dlName.toLowerCase().endsWith('.shml')) {
                 dlName = dlName.replace(/\.[^/.]+$/, '') + '.shml';
@@ -946,23 +1110,22 @@ __`
 
             showToast(`「${dlName}」をダウンロードしました！`);
 
-            // Firestore のダウンロード数を +1 更新
+            // パブリック共有コレクションの downloads を +1
             if (db && currentUser && plugin.id && !String(plugin.id).startsWith('local-')) {
                 try {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shml_plugins', plugin.id);
                     await updateDoc(docRef, {
                         downloads: increment(1)
                     });
-                    // 開いているモーダル表示も即時更新
                     const nextCount = (plugin.downloads || 0) + 1;
                     plugin.downloads = nextCount;
-                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${nextCount.toLocaleString()} DL`;
+                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${nextCount.toLocaleString()}`;
                 } catch (err) {
                     console.error('ダウンロード数更新エラー:', err);
                 }
             } else {
                 plugin.downloads = (plugin.downloads || 0) + 1;
-                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${plugin.downloads.toLocaleString()} DL`;
+                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${plugin.downloads.toLocaleString()}`;
                 renderPluginGrid();
             }
         }
@@ -978,7 +1141,7 @@ __`
             textarea.select();
             try {
                 document.execCommand('copy');
-                showToast('スクリプトコードをクリップボードにコピーしました！');
+                showToast('スクリプトコードをコピーしました！');
             } catch (e) {
                 showToast('コピーに失敗しました', 'error');
             }
@@ -1030,17 +1193,15 @@ __`
                 document.getElementById('selectedFileName').textContent = `📄 ${cleanFileName}`;
                 document.getElementById('selectedFileMeta').textContent = `${text.split('\n').length} 行 / ${(new Blob([text]).size)} Bytes`;
 
-                // タイトル未入力ならファイル名から自動補完
                 const titleInput = document.getElementById('uploadTitle');
                 if (!titleInput.value.trim()) {
                     titleInput.value = cleanFileName.replace(/\.shml$/i, '');
                 }
 
-                // プレビュー＆ブロックタグ検出
                 const blocks = detectShmlBlocks(text);
-                document.getElementById('uploadDetectedTags').innerHTML = blocks.map(tag =>
-                    `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`
-                ).join('');
+                document.getElementById('uploadDetectedTags').innerHTML = blocks.length > 0
+                    ? blocks.map(tag => `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
+                    : `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
                 document.getElementById('uploadCodePreview').textContent = text;
                 document.getElementById('uploadPreviewBox').classList.remove('hidden');
             };
@@ -1052,20 +1213,20 @@ __`
 
         dropZone.ondragover = (e) => {
             e.preventDefault();
-            dropZone.classList.add('border-[#10b981]', 'bg-emerald-950/20');
+            dropZone.classList.add('border-[#238636]', 'bg-emerald-950/20');
         };
         dropZone.ondragleave = () => {
-            dropZone.classList.remove('border-[#10b981]', 'bg-emerald-950/20');
+            dropZone.classList.remove('border-[#238636]', 'bg-emerald-950/20');
         };
         dropZone.ondrop = (e) => {
             e.preventDefault();
-            dropZone.classList.remove('border-[#10b981]', 'bg-emerald-950/20');
+            dropZone.classList.remove('border-[#238636]', 'bg-emerald-950/20');
             if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                 processSelectedFile(e.dataTransfer.files[0]);
             }
         };
 
-        // フォーム送信（Firestoreへ保存）
+        // フォーム送信（パブリック共有コレクションへ保存）
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
             if (!uploadedFileObj) {
@@ -1074,7 +1235,7 @@ __`
             }
 
             const title = document.getElementById('uploadTitle').value.trim();
-            const author = document.getElementById('uploadAuthor').value.trim() || '匿名クリエイター';
+            const author = document.getElementById('uploadAuthor').value.trim() || '名無しクリエイター';
             const description = document.getElementById('uploadDescription').value.trim();
 
             if (!title || !description) {
@@ -1084,7 +1245,7 @@ __`
 
             const submitBtn = document.getElementById('submitUploadBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>⏳</span><span>公開処理中...</span>';
+            submitBtn.innerHTML = '<span>⏳</span><span>公開中...</span>';
 
             const newPluginData = {
                 title,
@@ -1106,13 +1267,13 @@ __`
                 }
 
                 closeUploadModal();
-                showToast(`「${title}」をコミュニティのホームに公開しました！`);
+                showToast(`「${title}」をコミュニティに公開しました！`);
             } catch (err) {
                 console.error('アップロードエラー:', err);
                 showToast('公開中にエラーが発生しました: ' + err.message, 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>🚀</span><span>ホームに公開する</span>';
+                submitBtn.innerHTML = '<span>🚀</span><span>コミュニティに公開する</span>';
             }
         };
 
@@ -1126,7 +1287,6 @@ __`
         document.getElementById('downloadShmlBtn').onclick = handleDownloadPlugin;
         document.getElementById('copyCodeBtn').onclick = copyCodeToClipboard;
 
-        // モーダル背景クリックで閉じる
         document.getElementById('detailModal').onclick = (e) => {
             if (e.target.id === 'detailModal') closeDetailModal();
         };
@@ -1150,23 +1310,39 @@ __`
         // 並べ替えボタン
         sortNewestBtn.onclick = () => {
             currentSort = 'newest';
-            sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#10b981] text-[#0d1117] cursor-pointer';
+            sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer';
             sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer';
             renderPluginGrid();
         };
         sortPopularBtn.onclick = () => {
             currentSort = 'popular';
-            sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#10b981] text-[#0d1117] cursor-pointer';
+            sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer';
             sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer';
             renderPluginGrid();
         };
 
+        // ブロックフィルタボタン
+        document.querySelectorAll('.block-filter-btn').forEach(btn => {
+            btn.onclick = () => {
+                activeBlockFilter = btn.getAttribute('data-block');
+                document.querySelectorAll('.block-filter-btn').forEach(b => {
+                    const isSelected = b === btn;
+                    if (isSelected) {
+                        b.className = 'block-filter-btn active px-2.5 py-1 rounded-lg text-xs font-bold border transition bg-[#58a6ff] text-[#0d1117] border-[#58a6ff] cursor-pointer';
+                    } else {
+                        const isAll = b.getAttribute('data-block') === 'all';
+                        b.className = `block-filter-btn px-2.5 py-1 rounded-lg text-xs ${isAll ? 'font-bold' : 'font-mono-code font-semibold'} border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer`;
+                    }
+                });
+                renderPluginGrid();
+            };
+        });
+
         // ==========================================
-        // Firebase 初期化 ＆ リアルタイム同期
+        // Firebase 初期化 ＆ パブリックリアルタイム同期
         // ==========================================
         async function initApp() {
             if (!firebaseConfig) {
-                // オフラインフォールバック
                 setConnectionStatus(false, 'ローカルプレビュー');
                 allPlugins = INITIAL_SEED_PLUGINS.map((p, idx) => ({ id: 'local-seed-' + idx, ...p }));
                 renderPluginGrid();
@@ -1189,37 +1365,20 @@ __`
                 onAuthStateChanged(auth, (u) => { currentUser = u; });
 
                 if (!currentUser) return;
-                setConnectionStatus(true, 'コミュニティ同期中');
+                setConnectionStatus(true, '🌐 グローバル共有同期中');
 
-                // RULE 1: Strict Path
+                // RULE 1: パブリック共有コレクションパス
                 const pluginsCol = collection(db, 'artifacts', appId, 'public', 'data', 'shml_plugins');
-                const metaDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'shml_meta', 'reset_v1');
 
-                // 初回シードデータ投入 ＆ 過去のダミーDL数（128/214/96）のワンタイム0リセット
+                // 初回起動時（データベースが空の場合のみ）に公式サンプル3種を downloads: 0 で自動登録
                 const initialSnap = await getDocs(pluginsCol);
                 if (initialSnap.empty) {
                     for (const seed of INITIAL_SEED_PLUGINS) {
                         await addDoc(pluginsCol, seed);
                     }
-                    await setDoc(metaDocRef, { resetDone: true, updatedAt: Date.now() });
-                } else {
-                    const metaSnap = await getDoc(metaDocRef);
-                    if (!metaSnap.exists()) {
-                        const seedFiles = new Set(['speech_bubble.shml', 'shuuchuusenn.shml', 'hanntenn.shml']);
-                        for (const d of initialSnap.docs) {
-                            const data = d.data();
-                            if (seedFiles.has(data.fileName) && (data.downloads === 128 || data.downloads === 214 || data.downloads === 96)) {
-                                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shml_plugins', d.id), {
-                                    downloads: 0,
-                                    author: 'YuJitsu Dev'
-                                });
-                            }
-                        }
-                        await setDoc(metaDocRef, { resetDone: true, updatedAt: Date.now() });
-                    }
                 }
 
-                // RULE 2: シンプルな collection() クエリで全件取得し、JS側でソート・検索
+                // RULE 2: シンプルな collection() クエリで全件リアルタイム購読
                 onSnapshot(
                     pluginsCol,
                     (snapshot) => {
@@ -1230,12 +1389,12 @@ __`
                         allPlugins = list;
                         renderPluginGrid();
 
-                        // 詳細モーダルを開いている最中にダウンロード数が変わったらリアルタイム反映
+                        // 詳細モーダル表示中ならダウンロード数をリアルタイム反映
                         if (selectedPlugin) {
                             const updated = allPlugins.find(p => p.id === selectedPlugin.id);
                             if (updated) {
                                 selectedPlugin = updated;
-                                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(updated.downloads || 0).toLocaleString()} DL`;
+                                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(updated.downloads || 0).toLocaleString()}`;
                             }
                         }
                     },
