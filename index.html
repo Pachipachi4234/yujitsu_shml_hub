@@ -508,6 +508,7 @@
         let plugins = [];
         let likedIds = new Set();
         let likingInProgress = new Set();
+        let initialCreatedAtMap = new Map();
         let searchQuery = "";
         let selectedTag = "all";
         let selectedAuthor = "all";
@@ -714,7 +715,10 @@
                     const diff = (Number(b.downloads) || 0) - (Number(a.downloads) || 0);
                     if (diff !== 0) return diff;
                 }
-                return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+                const timeA = initialCreatedAtMap.get(String(a.id)) ?? new Date(a.created_at || 0).getTime();
+                const timeB = initialCreatedAtMap.get(String(b.id)) ?? new Date(b.created_at || 0).getTime();
+                if (timeB !== timeA) return timeB - timeA;
+                return String(b.id).localeCompare(String(a.id));
             });
 
             resultCount.textContent = filtered.length.toLocaleString();
@@ -1291,6 +1295,12 @@
             if (error) throw error;
 
             plugins = data || [];
+            plugins.forEach(p => {
+                const key = String(p.id);
+                if (!initialCreatedAtMap.has(key)) {
+                    initialCreatedAtMap.set(key, new Date(p.created_at || 0).getTime());
+                }
+            });
             syncAuthorDropdown();
             renderPlugins();
 
