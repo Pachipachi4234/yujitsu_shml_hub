@@ -61,35 +61,43 @@
                             PUBLIC STORE
                         </span>
                     </div>
-                    <p class="text-xs text-gray-400">ThumbnailMaker Pro プラグイン共有コミュニティ</p>
+                    <p class="text-xs text-gray-400">YuJitsu ThumbnailMaker 専用プラグイン共有コミュニティ</p>
                 </div>
             </div>
 
             <!-- 右側：グローバル同期ステータス・DB設定・アップロードボタン -->
             <div class="flex flex-wrap items-center gap-2 ml-auto">
-                <button id="openDbConfigBtn" title="クラウドDB接続設定を開く" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-200 bg-[#0d1117] hover:bg-[#21262d] px-3 py-2 rounded-xl border border-[#30363d] hover:border-[#58a6ff] transition cursor-pointer">
+                <button id="openDbConfigBtn" title="Supabase 接続設定・テーブル作成SQLを確認" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-200 bg-[#0d1117] hover:bg-[#21262d] px-3 py-2 rounded-xl border border-[#30363d] hover:border-[#58a6ff] transition cursor-pointer">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
-                    <span id="statusText">接続確認中...</span>
+                    <span id="statusText">Supabase 接続中...</span>
                     <span class="text-gray-500 ml-0.5">⚙️</span>
                 </button>
                 <button id="openUploadModalBtn" class="bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-500/40 transition flex items-center gap-2 cursor-pointer">
                     <span>📤</span>
-                    <span>ファイルをアップロード</span>
+                    <span>プラグインをアップロード</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- DB未接続時の案内バナー（接続済みになると自動で非表示） -->
-    <div id="localModeBanner" class="hidden bg-amber-950/60 border-b border-amber-500/40 px-4 py-2.5">
+    <!-- テーブル未作成・接続エラー時のセットアップ案内バナー -->
+    <div id="localModeBanner" class="hidden bg-amber-950/70 border-b border-amber-500/40 px-4 py-2.5">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-amber-200">
             <div class="flex items-center gap-2">
                 <span>⚠️</span>
-                <span>現在は <strong>ローカルモード</strong> です（GitHub Pagesで全員と共有するには無料の Supabase キーを設定してください）。</span>
+                <span id="bannerMessageText">Supabase の <code>public.shml_plugins</code> テーブルが未作成です。SQL Editor で1回実行すると全員とリアルタイム同期します！</span>
             </div>
-            <button id="bannerOpenConfigBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
-                ☁️ 30秒でクラウドDB接続設定を開く
-            </button>
+            <div class="flex items-center gap-2">
+                <button id="bannerCopySqlBtn" class="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-100 border border-emerald-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
+                    📋 テーブル作成SQLをコピー
+                </button>
+                <button id="bannerRetryConnectBtn" class="bg-sky-600/30 hover:bg-sky-600/50 text-sky-100 border border-sky-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
+                    🔄 SQL実行後に再接続
+                </button>
+                <button id="bannerOpenConfigBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
+                    ⚙️ 詳細手順を見る
+                </button>
+            </div>
         </div>
     </div>
 
@@ -202,7 +210,7 @@
                         プラグインタイトル
                     </h2>
                     <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                        <span>👤 作者: <strong id="detailAuthor" class="text-gray-200">名無しクリエイター</strong></span>
+                        <span>👤 作者: <strong id="detailAuthor" class="text-gray-200">匿名クリエイター</strong></span>
                         <span>🕒 投稿日時: <span id="detailDate">2026/01/01 00:00</span></span>
                     </div>
                 </div>
@@ -303,7 +311,7 @@
                             type="text"
                             id="uploadAuthor"
                             maxlength="30"
-                            placeholder="未入力時は「名無しクリエイター」"
+                            placeholder="未入力時は「匿名クリエイター」"
                             class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
                         >
                     </div>
@@ -372,19 +380,19 @@
                 <!-- ワンクリックコピーSQL -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-emerald-400">1. Supabase SQL Editor に貼るテーブル作成SQL:</span>
+                        <span class="font-bold text-emerald-400">1. Supabase SQL Editor に貼るテーブル＆DLカウント関数作成SQL:</span>
                         <button type="button" id="copySqlBtn" class="bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-2.5 py-1 rounded-lg font-bold transition cursor-pointer">
-                            📋 SQLをコピー
+                            📋 テーブル作成SQLをコピー
                         </button>
                     </div>
                     <pre id="setupSqlCode" class="bg-[#010409] border border-[#30363d] rounded-xl p-3 text-[11px] font-mono-code text-emerald-300 overflow-x-auto leading-relaxed">create table if not exists public.shml_plugins (
   id uuid default gen_random_uuid() primary key,
   title text not null,
-  author text not null default '名無しクリエイター',
+  author text not null default '匿名クリエイター',
   description text not null,
   file_name text not null,
   code text not null,
-  blocks text[] default '{}',
+  tags text[] default '{}',
   downloads bigint not null default 0,
   created_at timestamptz default now()
 );
@@ -394,6 +402,20 @@ alter table public.shml_plugins enable row level security;
 create policy "Public read" on public.shml_plugins for select using (true);
 create policy "Public insert" on public.shml_plugins for insert with check (true);
 create policy "Public update downloads" on public.shml_plugins for update using (true);
+
+create or replace function public.increment_shml_downloads(plugin_id uuid)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  update public.shml_plugins
+  set downloads = coalesce(downloads, 0) + 1
+  where id = plugin_id;
+end;
+$$;
+
+grant execute on function public.increment_shml_downloads(uuid) to anon, authenticated;
 
 alter publication supabase_realtime add table public.shml_plugins;</pre>
                 </div>
@@ -432,15 +454,29 @@ alter publication supabase_realtime add table public.shml_plugins;</pre>
 
     <script>
         // =========================================================================
-        // ★ GitHub Pages 公開用設定：ここに Supabase の URL と anon key を貼ると
-        //   アクセスした世界中の全員が自動的にグローバル共有同期されます！
+        // ★ Supabase クラウドDB接続設定（GitHub Pages 全員共有用）
         // =========================================================================
-        const SUPABASE_URL = "";
-        const SUPABASE_ANON_KEY = "";
+        const SUPABASE_URL = "https://nqfrmceiwchaeyjlgvil.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_zvWjyDspvXIOt4tJY5cEwA_lsMmw5rs";
 
-        const LOCAL_PLUGINS_STORAGE_KEY = 'yujitsu_shml_hub_local_plugins_v1';
+        const LOCAL_PLUGINS_STORAGE_KEY = 'yujitsu_shml_hub_local_plugins_v2';
         const LOCAL_SB_URL_KEY = 'yujitsu_shml_hub_sb_url';
         const LOCAL_SB_KEY_KEY = 'yujitsu_shml_hub_sb_key';
+        let isSeedingStarterPlugins = false;
+
+        // 有効な Supabase 接続情報（ローカル上書き優先・未設定時は埋め込み定数）を取得
+        function getActiveSupabaseConfig() {
+            let savedUrl = '';
+            let savedKey = '';
+            try {
+                savedUrl = (localStorage.getItem(LOCAL_SB_URL_KEY) || '').trim();
+                savedKey = (localStorage.getItem(LOCAL_SB_KEY_KEY) || '').trim();
+            } catch (e) {}
+            return {
+                url: savedUrl || SUPABASE_URL,
+                key: savedKey || SUPABASE_ANON_KEY
+            };
+        }
 
         // トースト通知
         function showToast(message, type = 'success') {
@@ -514,11 +550,11 @@ alter publication supabase_realtime add table public.shml_plugins;</pre>
         // 公式スタータープラグイン3種（すべて初期DL数 0）
         const INITIAL_SEED_PLUGINS = [
             {
-                title: '💬 吹き出しジェネレーター（緑●変形対応）',
+                title: '💬 吹き出しプラグイン (緑●変形)',
                 author: 'YuJitsu Dev',
                 description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（左下・下・右下・左上・上・右上・左・右・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接ドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
                 file_name: 'speech_bubble.shml',
-                blocks: ['[change]', '[html]', '[javascript]'],
+                tags: ['[change]', '[html]', '[javascript]'],
                 downloads: 0,
                 created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
                 code: `[change]
@@ -851,11 +887,11 @@ _
 __`
             },
             {
-                title: '⚡ 集中線エフェクト追加',
+                title: '⚡ 集中線エフェクト',
                 author: 'YuJitsu Dev',
                 description: 'サムネイルに迫力を出すマンガ風「集中線」レイヤーを追加できる公式プラグインです。\n\n【主な機能】\n・集中線の色、線の太さ、本数（密度）、中心の余白サイズをスライダーでリアルタイム調整\n・中心のオレンジターゲットをドラッグして、注目させたいキャラや文字に中心点を自由に移動可能\n・レイヤーの「上へ・下へ」ボタンで背景と文字の間に挟むこともできます！',
                 file_name: 'shuuchuusenn.shml',
-                blocks: ['[change]', '[html]', '[javascript]'],
+                tags: ['[change]', '[html]', '[javascript]'],
                 downloads: 0,
                 created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
                 code: `[change]
@@ -963,7 +999,7 @@ __`
                 author: 'YuJitsu Dev',
                 description: '選択中のテキストレイヤーやサブ画像レイヤーをワンクリックで「↔️ 左右反転」「↕️ 上下反転」できる軽量ユーティリティプラグインです。\n\n立ち絵イラストの向きを変えたい時や、鏡文字エフェクトを作りたい時に超便利です！',
                 file_name: 'hanntenn.shml',
-                blocks: ['[html]', '[javascript]'],
+                tags: ['[html]', '[javascript]'],
                 downloads: 0,
                 created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
                 code: `[html]
@@ -1059,21 +1095,21 @@ __`
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
         const sortNewestBtn = document.getElementById('sortNewestBtn');
-        const sortPopularBtn = document.getElementById('sortPopularBtn');
-
-        function getActiveSupabaseConfig() {
-            const url = (SUPABASE_URL || localStorage.getItem(LOCAL_SB_URL_KEY) || '').trim();
-            const key = (SUPABASE_ANON_KEY || localStorage.getItem(LOCAL_SB_KEY_KEY) || '').trim();
-            return { url, key };
-        }
-
-        function setConnectionStatus(online, text) {
+        function setConnectionStatus(online, text, bannerMsg = '') {
             const dot = document.getElementById('statusDot');
             const label = document.getElementById('statusText');
             const banner = document.getElementById('localModeBanner');
+            const bannerText = document.getElementById('bannerMessageText');
             dot.className = `w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
             label.textContent = text;
+            if (bannerMsg && bannerText) bannerText.innerHTML = bannerMsg;
             banner.classList.toggle('hidden', online);
+        }
+
+        function getPluginTags(plugin) {
+            if (Array.isArray(plugin.tags) && plugin.tags.length > 0) return plugin.tags;
+            if (Array.isArray(plugin.blocks) && plugin.blocks.length > 0) return plugin.blocks;
+            return detectShmlBlocks(plugin.code || '');
         }
 
         function formatDate(isoStr) {
@@ -1113,8 +1149,7 @@ __`
             const q = searchQuery.trim().toLowerCase();
 
             let filtered = allPlugins.filter(p => {
-                const codeText = p.code || '';
-                const blocks = Array.isArray(p.blocks) && p.blocks.length > 0 ? p.blocks : detectShmlBlocks(codeText);
+                const blocks = getPluginTags(p);
 
                 if (activeBlockFilter !== 'all' && !blocks.includes(activeBlockFilter)) {
                     return false;
@@ -1150,9 +1185,7 @@ __`
             pluginGrid.innerHTML = '';
 
             filtered.forEach(plugin => {
-                const blocks = Array.isArray(plugin.blocks) && plugin.blocks.length > 0
-                    ? plugin.blocks
-                    : detectShmlBlocks(plugin.code || '');
+                const blocks = getPluginTags(plugin);
 
                 const card = document.createElement('article');
                 card.className = 'plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4 cursor-pointer';
@@ -1187,7 +1220,7 @@ __`
                     </div>
 
                     <div class="pt-3 border-t border-[#30363d] flex items-center justify-between text-[11px] text-gray-400">
-                        <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '名無しクリエイター')}</span>
+                        <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '匿名クリエイター')}</span>
                         <span>${formatDate(plugin.created_at)}</span>
                     </div>
                 `;
@@ -1203,14 +1236,12 @@ __`
             document.getElementById('detailFileNameBadge').textContent = `📄 ${plugin.file_name || 'plugin.shml'}`;
             document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(plugin.downloads) || 0).toLocaleString()}`;
             document.getElementById('detailTitle').textContent = plugin.title;
-            document.getElementById('detailAuthor').textContent = plugin.author || '名無しクリエイター';
+            document.getElementById('detailAuthor').textContent = plugin.author || '匿名クリエイター';
             document.getElementById('detailDate').textContent = formatDate(plugin.created_at);
             document.getElementById('detailDescription').textContent = plugin.description;
             document.getElementById('detailCodePreview').textContent = plugin.code || '';
 
-            const blocks = Array.isArray(plugin.blocks) && plugin.blocks.length > 0
-                ? plugin.blocks
-                : detectShmlBlocks(plugin.code || '');
+            const blocks = getPluginTags(plugin);
 
             const tagsRow = document.getElementById('detailTagsRow');
             tagsRow.innerHTML = blocks.length > 0
@@ -1225,7 +1256,7 @@ __`
             selectedPlugin = null;
         }
 
-        // ダウンロード＆DL数カウントアップ
+        // ダウンロード＆DL数カウントアップ（Supabase RPC + 楽観的UI更新）
         async function handleDownloadPlugin() {
             if (!selectedPlugin) return;
             const plugin = selectedPlugin;
@@ -1254,11 +1285,16 @@ __`
 
             if (supabaseClient && plugin.id && !String(plugin.id).startsWith('local-')) {
                 try {
-                    const { error } = await supabaseClient
-                        .from('shml_plugins')
-                        .update({ downloads: nextCount })
-                        .eq('id', plugin.id);
-                    if (error) throw error;
+                    const { error: rpcError } = await supabaseClient.rpc('increment_shml_downloads', {
+                        plugin_id: plugin.id
+                    });
+                    if (rpcError) {
+                        const { error: updError } = await supabaseClient
+                            .from('shml_plugins')
+                            .update({ downloads: nextCount })
+                            .eq('id', plugin.id);
+                        if (updError) throw updError;
+                    }
                 } catch (err) {
                     console.error('Supabase DL数更新エラー:', err);
                 }
@@ -1351,7 +1387,7 @@ __`
             }
 
             const title = document.getElementById('uploadTitle').value.trim();
-            const author = document.getElementById('uploadAuthor').value.trim() || '名無しクリエイター';
+            const author = document.getElementById('uploadAuthor').value.trim() || '匿名クリエイター';
             const description = document.getElementById('uploadDescription').value.trim();
 
             if (!title || !description) {
@@ -1369,7 +1405,7 @@ __`
                 description,
                 file_name: uploadedFileObj.name,
                 code: uploadedFileObj.code,
-                blocks: uploadedFileObj.blocks,
+                tags: uploadedFileObj.blocks,
                 downloads: 0
             };
 
@@ -1399,7 +1435,7 @@ __`
                 showToast(`「${title}」を公開しました！`);
             } catch (err) {
                 console.error('アップロードエラー:', err);
-                showToast('公開エラー: ' + (err.message || 'DBのRLSポリシーを確認してください'), 'error');
+                showToast('公開エラー: ' + (err.message || 'テーブル作成SQLを実行したか確認してください'), 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>🚀</span><span>コミュニティに公開する</span>';
@@ -1445,10 +1481,17 @@ __`
         // イベントバインド
         document.getElementById('openDbConfigBtn').onclick = openDbConfigModal;
         document.getElementById('bannerOpenConfigBtn').onclick = openDbConfigModal;
+        document.getElementById('bannerCopySqlBtn').onclick = () => {
+            copyTextSafe(document.getElementById('setupSqlCode').textContent, 'テーブル作成SQLをコピーしました！SupabaseのSQL Editorに貼り付けてRunしてください');
+        };
+        document.getElementById('bannerRetryConnectBtn').onclick = async () => {
+            showToast('Supabase へ再接続しています...');
+            await initSupabaseAndLoad();
+        };
         document.getElementById('closeDbConfigBtn').onclick = closeDbConfigModal;
         document.getElementById('cancelDbConfigBtn').onclick = closeDbConfigModal;
         document.getElementById('copySqlBtn').onclick = () => {
-            copyTextSafe(document.getElementById('setupSqlCode').textContent, 'SQLをクリップボードにコピーしました！');
+            copyTextSafe(document.getElementById('setupSqlCode').textContent, 'テーブル作成SQLをクリップボードにコピーしました！');
         };
 
         document.getElementById('openUploadModalBtn').onclick = openUploadModal;
@@ -1534,29 +1577,34 @@ __`
 
                 if (error) throw error;
 
-                setConnectionStatus(true, '🌐 グローバル共有同期中 (Supabase)');
+                setConnectionStatus(true, '🌐 Supabase グローバル同期中');
 
-                // テーブルが完全に空なら公式サンプル3種を downloads: 0 で初期シード
-                if (!data || data.length === 0) {
-                    const seedRows = INITIAL_SEED_PLUGINS.map(({ created_at, ...rest }) => rest);
-                    const { data: inserted, error: seedErr } = await supabaseClient
-                        .from('shml_plugins')
-                        .insert(seedRows)
-                        .select();
-                    if (!seedErr && inserted) {
-                        allPlugins = inserted;
-                    } else {
-                        allPlugins = [];
+                // テーブルが完全に空なら公式サンプル3種を downloads: 0 で初期シード（重複実行ガード付き）
+                if ((!data || data.length === 0) && !isSeedingStarterPlugins) {
+                    isSeedingStarterPlugins = true;
+                    try {
+                        const seedRows = INITIAL_SEED_PLUGINS.map(({ created_at, ...rest }) => rest);
+                        const { data: inserted, error: seedErr } = await supabaseClient
+                            .from('shml_plugins')
+                            .insert(seedRows)
+                            .select();
+                        if (!seedErr && inserted) {
+                            allPlugins = inserted;
+                        } else {
+                            allPlugins = [];
+                        }
+                    } finally {
+                        isSeedingStarterPlugins = false;
                     }
                 } else {
-                    allPlugins = data;
+                    allPlugins = data || [];
                 }
 
                 renderPluginGrid();
 
                 // Postgres Realtime 購読（新規追加・DL数更新を全ユーザー間で即時反映）
                 realtimeChannel = supabaseClient
-                    .channel('public:shml_plugins')
+                    .channel('shml-hub-realtime')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'shml_plugins' }, (payload) => {
                         if (payload.eventType === 'INSERT') {
                             if (!allPlugins.some(p => p.id === payload.new.id)) {
@@ -1579,8 +1627,11 @@ __`
             } catch (err) {
                 console.error('Supabase接続エラー:', err);
                 supabaseClient = null;
-                setConnectionStatus(false, '⚠️ DB接続エラー (ローカル表示中)');
-                showToast('Supabase接続に失敗しました。SQLまたはURL/Keyを確認してください', 'error');
+                setConnectionStatus(
+                    false,
+                    '⚠️ テーブル未作成 (SQL実行待ち)',
+                    'Supabase に接続できましたが <code>public.shml_plugins</code> テーブルがまだありません。右のボタンからSQLをコピーして Supabase の <strong>SQL Editor</strong> で実行してください！'
+                );
                 allPlugins = loadLocalPlugins();
                 renderPluginGrid();
             }
