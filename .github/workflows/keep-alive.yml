@@ -1,16 +1,15 @@
 name: Keep Supabase Alive
-   on:
-     schedule:
-       # 毎週 月曜・木曜 の朝9時(UTC)に自動実行して一時停止を防ぐ
-       - cron: '0 9 * * 1,4'
-     workflow_dispatch:
+on:
+  schedule:
+    - cron: '0 9 * * 1,4'
+  workflow_dispatch:
 
-   jobs:
-     ping:
-       runs-on: ubuntu-latest
-       steps:
-         - name: Ping Supabase REST API
-           run: |
-             curl -s -o /dev/null -w "%{http_code}\n" \
-               "https://nqfrmceiwchaeyjlgvil.supabase.co/rest/v1/shml_plugins?select=id&limit=1" \
-               -H "apikey: sb_publishable_zvWjyDspvXIOt4tJY5cEwA_lsMmw5rs"
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          curl -f -s -o /dev/null -w "%{http_code}\n" \
+            "https://nqfrmceiwchaeyjlgvil.supabase.co/rest/v1/shml_plugins?select=id&limit=1" \
+            -H "apikey: sb_publishable_zvWjyDspvXIOt4tJY5cEwA_lsMmw5rs"
