@@ -65,13 +65,12 @@
                 </div>
             </div>
 
-            <!-- 右側：グローバル同期ステータス・DB設定・アップロードボタン -->
+            <!-- 右側：グローバル同期ステータス・アップロードボタン -->
             <div class="flex flex-wrap items-center gap-2 ml-auto">
-                <button id="openDbConfigBtn" title="Supabase 接続設定・テーブル作成SQLを確認" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-200 bg-[#0d1117] hover:bg-[#21262d] px-3 py-2 rounded-xl border border-[#30363d] hover:border-[#58a6ff] transition cursor-pointer">
+                <div class="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-200 bg-[#0d1117] px-3 py-2 rounded-xl border border-[#30363d]">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
-                    <span id="statusText">Supabase 接続中...</span>
-                    <span class="text-gray-500 ml-0.5">⚙️</span>
-                </button>
+                    <span id="statusText">接続中...</span>
+                </div>
                 <button id="openUploadModalBtn" class="bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-500/40 transition flex items-center gap-2 cursor-pointer">
                     <span>📤</span>
                     <span>プラグインをアップロード</span>
@@ -79,27 +78,6 @@
             </div>
         </div>
     </header>
-
-    <!-- テーブル未作成・接続エラー時のセットアップ案内バナー -->
-    <div id="localModeBanner" class="hidden bg-amber-950/70 border-b border-amber-500/40 px-4 py-2.5">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-amber-200">
-            <div class="flex items-center gap-2">
-                <span>⚠️</span>
-                <span id="bannerMessageText">Supabase の <code>public.shml_plugins</code> テーブルが未作成です。SQL Editor で1回実行すると全員とリアルタイム同期します！</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <button id="bannerCopySqlBtn" class="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-100 border border-emerald-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
-                    📋 テーブル作成SQLをコピー
-                </button>
-                <button id="bannerRetryConnectBtn" class="bg-sky-600/30 hover:bg-sky-600/50 text-sky-100 border border-sky-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
-                    🔄 SQL実行後に再接続
-                </button>
-                <button id="bannerOpenConfigBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-400/50 px-3 py-1 rounded-lg font-bold transition cursor-pointer">
-                    ⚙️ 詳細手順を見る
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- メインコンテンツ -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5">
@@ -352,131 +330,18 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- モーダル③：Supabase クラウドDB接続設定（GitHub Pages用） -->
-    <!-- ========================================== -->
-    <div id="dbConfigModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">☁️</span>
-                    <h2 class="text-base sm:text-lg font-extrabold text-white">Supabase クラウドDB接続設定 (GitHub Pages対応)</h2>
-                </div>
-                <button id="closeDbConfigBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer">
-                    ✕
-                </button>
-            </div>
-
-            <div class="p-5 overflow-y-auto space-y-4 flex-1 text-xs text-gray-300 leading-relaxed">
-                <div class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3.5 space-y-1">
-                    <p class="font-bold text-[#58a6ff]">💡 GitHub Pages で世界中の全員と共有する手順（完全無料・30秒）</p>
-                    <ol class="list-decimal list-inside space-y-1 text-gray-300">
-                        <li><a href="https://supabase.com/" target="_blank" rel="noopener" class="text-[#58a6ff] underline font-bold">Supabase</a> で無料プロジェクトを作成します。</li>
-                        <li>左メニューの <strong>SQL Editor</strong> に下のSQLを貼り付けて <strong>Run</strong> を押します。</li>
-                        <li><strong>Project Settings &gt; API</strong> にある <code>Project URL</code> と <code>anon public key</code> を下に入力して保存！（さらに HTML内の <code>SUPABASE_URL</code> と <code>SUPABASE_ANON_KEY</code> に書いて GitHub に上げると訪問者全員が最初から同期します）</li>
-                    </ol>
-                </div>
-
-                <!-- ワンクリックコピーSQL -->
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-emerald-400">1. Supabase SQL Editor に貼るテーブル＆DLカウント関数作成SQL:</span>
-                        <button type="button" id="copySqlBtn" class="bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-2.5 py-1 rounded-lg font-bold transition cursor-pointer">
-                            📋 テーブル作成SQLをコピー
-                        </button>
-                    </div>
-                    <pre id="setupSqlCode" class="bg-[#010409] border border-[#30363d] rounded-xl p-3 text-[11px] font-mono-code text-emerald-300 overflow-x-auto leading-relaxed">create table if not exists public.shml_plugins (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  author text not null default '匿名クリエイター',
-  description text not null,
-  file_name text not null,
-  code text not null,
-  tags text[] default '{}',
-  downloads bigint not null default 0,
-  created_at timestamptz default now()
-);
-
-alter table public.shml_plugins enable row level security;
-
-create policy "Public read" on public.shml_plugins for select using (true);
-create policy "Public insert" on public.shml_plugins for insert with check (true);
-create policy "Public update downloads" on public.shml_plugins for update using (true);
-
-create or replace function public.increment_shml_downloads(plugin_id uuid)
-returns void
-language plpgsql
-security definer
-as $$
-begin
-  update public.shml_plugins
-  set downloads = coalesce(downloads, 0) + 1
-  where id = plugin_id;
-end;
-$$;
-
-grant execute on function public.increment_shml_downloads(uuid) to anon, authenticated;
-
-alter publication supabase_realtime add table public.shml_plugins;</pre>
-                </div>
-
-                <!-- ブラウザテスト用キー入力フォーム -->
-                <form id="dbConfigForm" class="space-y-3 pt-2 border-t border-[#30363d]">
-                    <div>
-                        <label class="block font-bold text-gray-200 mb-1">2. Supabase Project URL</label>
-                        <input type="url" id="inputSupabaseUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3 py-2 text-xs font-mono-code text-white">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-gray-200 mb-1">3. Supabase anon public key</label>
-                        <input type="text" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3 py-2 text-xs font-mono-code text-white">
-                    </div>
-                </form>
-            </div>
-
-            <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex items-center justify-between gap-2">
-                <button type="button" id="resetDbConfigBtn" class="px-3 py-2 rounded-xl text-xs font-bold text-rose-300 hover:bg-rose-950/50 border border-rose-500/30 cursor-pointer">
-                    設定クリア
-                </button>
-                <div class="flex items-center gap-2">
-                    <button type="button" id="cancelDbConfigBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 bg-[#161b22] border border-[#30363d] cursor-pointer">
-                        閉じる
-                    </button>
-                    <button type="submit" form="dbConfigForm" class="bg-[#238636] hover:bg-[#2ea043] text-white font-extrabold text-xs px-5 py-2 rounded-xl shadow-lg border border-emerald-500/40 cursor-pointer">
-                        💾 保存して接続する
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- カスタムトースト通知 -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
         // =========================================================================
-        // ★ Supabase クラウドDB接続設定（GitHub Pages 全員共有用）
+        // ★ Supabase クラウドDB接続設定（固定）
         // =========================================================================
         const SUPABASE_URL = "https://nqfrmceiwchaeyjlgvil.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_zvWjyDspvXIOt4tJY5cEwA_lsMmw5rs";
 
         const LOCAL_PLUGINS_STORAGE_KEY = 'yujitsu_shml_hub_local_plugins_v2';
-        const LOCAL_SB_URL_KEY = 'yujitsu_shml_hub_sb_url';
-        const LOCAL_SB_KEY_KEY = 'yujitsu_shml_hub_sb_key';
         let isSeedingStarterPlugins = false;
-
-        // 有効な Supabase 接続情報（ローカル上書き優先・未設定時は埋め込み定数）を取得
-        function getActiveSupabaseConfig() {
-            let savedUrl = '';
-            let savedKey = '';
-            try {
-                savedUrl = (localStorage.getItem(LOCAL_SB_URL_KEY) || '').trim();
-                savedKey = (localStorage.getItem(LOCAL_SB_KEY_KEY) || '').trim();
-            } catch (e) {}
-            return {
-                url: savedUrl || SUPABASE_URL,
-                key: savedKey || SUPABASE_ANON_KEY
-            };
-        }
 
         // トースト通知
         function showToast(message, type = 'success') {
@@ -1080,6 +945,7 @@ __`
         // アプリ状態
         let supabaseClient = null;
         let realtimeChannel = null;
+        let pollingTimer = null;
         let allPlugins = [];
         let currentSort = 'newest';
         let activeBlockFilter = 'all';
@@ -1095,15 +961,11 @@ __`
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
         const sortNewestBtn = document.getElementById('sortNewestBtn');
-        function setConnectionStatus(online, text, bannerMsg = '') {
+        function setConnectionStatus(online, text) {
             const dot = document.getElementById('statusDot');
             const label = document.getElementById('statusText');
-            const banner = document.getElementById('localModeBanner');
-            const bannerText = document.getElementById('bannerMessageText');
             dot.className = `w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
             label.textContent = text;
-            if (bannerMsg && bannerText) bannerText.innerHTML = bannerMsg;
-            banner.classList.toggle('hidden', online);
         }
 
         function getPluginTags(plugin) {
@@ -1435,65 +1297,14 @@ __`
                 showToast(`「${title}」を公開しました！`);
             } catch (err) {
                 console.error('アップロードエラー:', err);
-                showToast('公開エラー: ' + (err.message || 'テーブル作成SQLを実行したか確認してください'), 'error');
+                showToast('公開エラー: ' + (err.message || '通信エラーが発生しました'), 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>🚀</span><span>コミュニティに公開する</span>';
             }
         };
 
-        // DB設定モーダル
-        const dbConfigModal = document.getElementById('dbConfigModal');
-        function openDbConfigModal() {
-            const { url, key } = getActiveSupabaseConfig();
-            document.getElementById('inputSupabaseUrl').value = url;
-            document.getElementById('inputSupabaseKey').value = key;
-            dbConfigModal.classList.remove('hidden');
-        }
-        function closeDbConfigModal() {
-            dbConfigModal.classList.add('hidden');
-        }
-
-        document.getElementById('dbConfigForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const url = document.getElementById('inputSupabaseUrl').value.trim();
-            const key = document.getElementById('inputSupabaseKey').value.trim();
-            if (!url || !key) {
-                showToast('Project URL と anon public key の両方を入力してください', 'error');
-                return;
-            }
-            localStorage.setItem(LOCAL_SB_URL_KEY, url);
-            localStorage.setItem(LOCAL_SB_KEY_KEY, key);
-            closeDbConfigModal();
-            showToast('Supabase設定を保存しました。接続中...');
-            await initSupabaseAndLoad();
-        };
-
-        document.getElementById('resetDbConfigBtn').onclick = async () => {
-            localStorage.removeItem(LOCAL_SB_URL_KEY);
-            localStorage.removeItem(LOCAL_SB_KEY_KEY);
-            document.getElementById('inputSupabaseUrl').value = '';
-            document.getElementById('inputSupabaseKey').value = '';
-            showToast('ローカル保存されたDB設定をクリアしました');
-            await initSupabaseAndLoad();
-        };
-
         // イベントバインド
-        document.getElementById('openDbConfigBtn').onclick = openDbConfigModal;
-        document.getElementById('bannerOpenConfigBtn').onclick = openDbConfigModal;
-        document.getElementById('bannerCopySqlBtn').onclick = () => {
-            copyTextSafe(document.getElementById('setupSqlCode').textContent, 'テーブル作成SQLをコピーしました！SupabaseのSQL Editorに貼り付けてRunしてください');
-        };
-        document.getElementById('bannerRetryConnectBtn').onclick = async () => {
-            showToast('Supabase へ再接続しています...');
-            await initSupabaseAndLoad();
-        };
-        document.getElementById('closeDbConfigBtn').onclick = closeDbConfigModal;
-        document.getElementById('cancelDbConfigBtn').onclick = closeDbConfigModal;
-        document.getElementById('copySqlBtn').onclick = () => {
-            copyTextSafe(document.getElementById('setupSqlCode').textContent, 'テーブル作成SQLをクリップボードにコピーしました！');
-        };
-
         document.getElementById('openUploadModalBtn').onclick = openUploadModal;
         document.getElementById('closeUploadModalBtn').onclick = closeUploadModal;
         document.getElementById('cancelUploadBtn').onclick = closeUploadModal;
@@ -1505,7 +1316,6 @@ __`
 
         document.getElementById('detailModal').onclick = (e) => { if (e.target.id === 'detailModal') closeDetailModal(); };
         document.getElementById('uploadModal').onclick = (e) => { if (e.target.id === 'uploadModal') closeUploadModal(); };
-        document.getElementById('dbConfigModal').onclick = (e) => { if (e.target.id === 'dbConfigModal') closeDbConfigModal(); };
 
         searchInput.oninput = (e) => {
             searchQuery = e.target.value;
@@ -1551,24 +1361,57 @@ __`
         // =========================================================================
         // Supabase 初期化＆リアルタイム購読
         // =========================================================================
+        // Supabase 初期化＆同期（WebSocket制限環境では自動ポーリングへフォールバック）
+        // =========================================================================
+        async function fetchPluginsFromSupabase() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient
+                .from('shml_plugins')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            allPlugins = data || [];
+            if (selectedPlugin) {
+                const updated = allPlugins.find(p => p.id === selectedPlugin.id);
+                if (updated) {
+                    selectedPlugin = updated;
+                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(updated.downloads) || 0).toLocaleString()}`;
+                }
+            }
+            renderPluginGrid();
+        }
+
+        function startPollingSync() {
+            if (pollingTimer) clearInterval(pollingTimer);
+            pollingTimer = setInterval(async () => {
+                try {
+                    await fetchPluginsFromSupabase();
+                } catch (e) {
+                    // バックグラウンド更新時のエラーは無視
+                }
+            }, 10000);
+        }
+
         async function initSupabaseAndLoad() {
+            if (pollingTimer) {
+                clearInterval(pollingTimer);
+                pollingTimer = null;
+            }
             if (realtimeChannel && supabaseClient) {
-                await supabaseClient.removeChannel(realtimeChannel);
+                try { await supabaseClient.removeChannel(realtimeChannel); } catch (e) {}
                 realtimeChannel = null;
             }
             supabaseClient = null;
 
-            const { url, key } = getActiveSupabaseConfig();
-
-            if (!url || !key || !window.supabase) {
-                setConnectionStatus(false, '⚠️ ローカルモード (DB未接続)');
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !window.supabase) {
+                setConnectionStatus(false, '⚠️ オフラインモード');
                 allPlugins = loadLocalPlugins();
                 renderPluginGrid();
                 return;
             }
 
             try {
-                supabaseClient = window.supabase.createClient(url, key);
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
                 const { data, error } = await supabaseClient
                     .from('shml_plugins')
@@ -1577,7 +1420,7 @@ __`
 
                 if (error) throw error;
 
-                setConnectionStatus(true, '🌐 Supabase グローバル同期中');
+                setConnectionStatus(true, '🌐 オンライン同期中');
 
                 // テーブルが完全に空なら公式サンプル3種を downloads: 0 で初期シード（重複実行ガード付き）
                 if ((!data || data.length === 0) && !isSeedingStarterPlugins) {
@@ -1602,36 +1445,41 @@ __`
 
                 renderPluginGrid();
 
-                // Postgres Realtime 購読（新規追加・DL数更新を全ユーザー間で即時反映）
-                realtimeChannel = supabaseClient
-                    .channel('shml-hub-realtime')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'shml_plugins' }, (payload) => {
-                        if (payload.eventType === 'INSERT') {
-                            if (!allPlugins.some(p => p.id === payload.new.id)) {
-                                allPlugins.unshift(payload.new);
+                // Realtime WebSocket 購読（Canvas など WebSocket 禁止環境では自動で定期同期に切替）
+                try {
+                    realtimeChannel = supabaseClient
+                        .channel('shml-hub-realtime')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'shml_plugins' }, (payload) => {
+                            if (payload.eventType === 'INSERT') {
+                                if (!allPlugins.some(p => p.id === payload.new.id)) {
+                                    allPlugins.unshift(payload.new);
+                                }
+                            } else if (payload.eventType === 'UPDATE') {
+                                const idx = allPlugins.findIndex(p => p.id === payload.new.id);
+                                if (idx !== -1) allPlugins[idx] = payload.new;
+                                if (selectedPlugin && selectedPlugin.id === payload.new.id) {
+                                    selectedPlugin = payload.new;
+                                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(payload.new.downloads) || 0).toLocaleString()}`;
+                                }
+                            } else if (payload.eventType === 'DELETE') {
+                                allPlugins = allPlugins.filter(p => p.id !== payload.old.id);
                             }
-                        } else if (payload.eventType === 'UPDATE') {
-                            const idx = allPlugins.findIndex(p => p.id === payload.new.id);
-                            if (idx !== -1) allPlugins[idx] = payload.new;
-                            if (selectedPlugin && selectedPlugin.id === payload.new.id) {
-                                selectedPlugin = payload.new;
-                                document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(payload.new.downloads) || 0).toLocaleString()}`;
+                            renderPluginGrid();
+                        })
+                        .subscribe((status) => {
+                            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                                startPollingSync();
                             }
-                        } else if (payload.eventType === 'DELETE') {
-                            allPlugins = allPlugins.filter(p => p.id !== payload.old.id);
-                        }
-                        renderPluginGrid();
-                    })
-                    .subscribe();
+                        });
+                } catch (wsErr) {
+                    // Canvas サンドボックス等では WebSocket 不可のため10秒ごとの自動同期へ切替
+                    startPollingSync();
+                }
 
             } catch (err) {
                 console.error('Supabase接続エラー:', err);
                 supabaseClient = null;
-                setConnectionStatus(
-                    false,
-                    '⚠️ テーブル未作成 (SQL実行待ち)',
-                    'Supabase に接続できましたが <code>public.shml_plugins</code> テーブルがまだありません。右のボタンからSQLをコピーして Supabase の <strong>SQL Editor</strong> で実行してください！'
-                );
+                setConnectionStatus(false, '⚠️ 接続エラー (オフライン表示)');
                 allPlugins = loadLocalPlugins();
                 renderPluginGrid();
             }
