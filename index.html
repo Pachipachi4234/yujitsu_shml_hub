@@ -507,6 +507,7 @@
 
         let plugins = [];
         let likedIds = new Set();
+        let likingInProgress = new Set();
         let searchQuery = "";
         let selectedTag = "all";
         let selectedAuthor = "all";
@@ -514,16 +515,16 @@
         let activeDetailPlugin = null;
 
         // =========================================================================
-        // 3. ユーティリティ関数（SHA-256ハッシュ・タグ検出・コピー・トースト）
+        // 3. ユーティリティ関数（ストレージ・ハッシュ・SHML解析・通知）
         // =========================================================================
         function loadLikedIds() {
             try {
                 const raw = localStorage.getItem(LIKED_IDS_KEY);
-                if (raw) {
-                    const arr = JSON.parse(raw);
-                    if (Array.isArray(arr)) likedIds = new Set(arr.map(String));
-                }
-            } catch (e) {}
+                const arr = raw ? JSON.parse(raw) : [];
+                likedIds = new Set(Array.isArray(arr) ? arr.map(String) : []);
+            } catch (e) {
+                likedIds = new Set();
+            }
         }
 
         function saveLikedIds() {
@@ -532,136 +533,141 @@
             } catch (e) {}
         }
 
-        async function sha256Hex(plainText) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(plainText);
-            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-        }
-
         function escapeHtml(str) {
             return String(str ?? "")
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+                .replace(/'/g, "&#39;");
         }
 
-        function showToast(message, type = "success") {
-            const container = document.getElementById("toastContainer");
-            const el = document.createElement("div");
-            const style = type === "error"
-                ? "bg-rose-950/95 border-rose-500/80 text-rose-200"
-                : "bg-slate-900/95 border-emerald-500/80 text-emerald-200";
-            el.className = `pointer-events-auto border px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 transition-all duration-300 translate-y-2 opacity-0 ${style}`;
-            el.innerHTML = `<span>${type === "error" ? "⚠️" : "✨"}</span><span>${escapeHtml(message)}</span>`;
-            container.appendChild(el);
-
-            requestAnimationFrame(() => el.classList.remove("translate-y-2", "opacity-0"));
-            setTimeout(() => {
-                el.classList.add("translate-y-2", "opacity-0");
-                setTimeout(() => el.remove(), 300);
-            }, 3000);
+        function formatDateTime(isoString) {
+            if (!isoString) return "";
+            const d = new Date(isoString);
+            if (isNaN(d.getTime())) return "";
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
 
-        function copyTextFallback(text, successMsg) {
-            const ta = document.createElement("textarea");
-            ta.value = text;
-            ta.style.position = "fixed";
-            ta.style.opacity = "0";
-            document.body.appendChild(ta);
-            ta.select();
-            try {
-                document.execCommand("copy");
-                showToast(successMsg);
-            } catch (e) {
-                showToast("コピーに失敗しました", "error");
-            }
-            document.body.removeChild(ta);
+        async function sha256Hex(text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
         }
 
         function extractShmlTags(code) {
-            const found = new Set();
-            const regex = /^\s*\[(change|html|javascript|js|css|style|python|java|php)\]/gim;
-            let match;
-            while ((match = regex.exec(code || "")) !== null) {
-                let tag = match[1].toLowerCase();
-                if (tag === "js") tag = "javascript";
-                found.add(`[${tag}]`);
-            }
-            return Array.from(found);
+            const knownTags = ["[change]", "[html]", "[javascript]", "[css]", "[style]"];
+            const lower = String(code || "").toLowerCase();
+            return knownTags.filter(tag => lower.includes(tag));
         }
 
         function getPluginTags(plugin) {
-            if (Array.isArray(plugin.tags) && plugin.tags.length > 0) return plugin.tags;
+            if (Array.isArray(plugin.tags) && plugin.tags.length > 0) {
+                return plugin.tags;
+            }
             return extractShmlTags(plugin.code || "");
         }
 
         function getTagStyle(tag) {
-            switch (tag) {
-                case "[change]": return "bg-purple-500/15 text-purple-300 border-purple-500/35";
-                case "[html]": return "bg-rose-500/15 text-rose-300 border-rose-500/35";
-                case "[javascript]": return "bg-amber-500/15 text-amber-300 border-amber-500/35";
-                case "[css]": return "bg-cyan-500/15 text-cyan-300 border-cyan-500/35";
-                case "[style]": return "bg-indigo-500/15 text-indigo-300 border-indigo-500/35";
-                default: return "bg-slate-700/40 text-slate-300 border-slate-600/50";
+            const t = String(tag).toLowerCase();
+            if (t === "[change]") return "bg-purple-500/15 text-purple-300 border-purple-500/35";
+            if (t === "[html]") return "bg-sky-500/15 text-sky-300 border-sky-500/35";
+            if (t === "[javascript]") return "bg-amber-500/15 text-amber-300 border-amber-500/35";
+            if (t === "[css]" || t === "[style]") return "bg-emerald-500/15 text-emerald-300 border-emerald-500/35";
+            return "bg-slate-800/70 text-slate-300 border-slate-700";
+        }
+
+        function highlightShmlCode(code) {
+            return String(code || "")
+                .split("\n")
+                .map(line => {
+                    const escaped = escapeHtml(line);
+                    const trimmed = line.trim();
+                    if (/^\[(change|html|javascript|css|style)\]/i.test(trimmed)) {
+                        return `<span class="shml-directive">${escaped}</span>`;
+                    }
+                    if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
+                        return `<span class="shml-comment">${escaped}</span>`;
+                    }
+                    return escaped;
+                })
+                .join("\n");
+        }
+
+        function copyTextFallback(text, successMsg) {
+            try {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                textarea.style.position = "fixed";
+                textarea.style.opacity = "0";
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                showToast(successMsg || "コピーしました！");
+            } catch (e) {
+                showToast("コピーに失敗しました", "error");
             }
         }
 
-        function formatDateTime(iso) {
-            if (!iso) return "日時不明";
-            const d = new Date(iso);
-            if (isNaN(d.getTime())) return "日時不明";
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, "0");
-            const day = String(d.getDate()).padStart(2, "0");
-            const hh = String(d.getHours()).padStart(2, "0");
-            const mm = String(d.getMinutes()).padStart(2, "0");
-            return `${y}/${m}/${day} ${hh}:${mm}`;
-        }
-
-        function highlightShmlCode(rawCode) {
-            return escapeHtml(rawCode || "")
-                .replace(/^(\s*\[(?:change|html|javascript|js|css|style|python|java|php)\]|_+)/gim, '<span class="shml-directive">$1</span>')
-                .replace(/^(\s*#.*)$/gm, '<span class="shml-comment">$1</span>');
-        }
-
-        function updateConnectionBadge(isOnline, label) {
+        function updateConnectionBadge(connected, label) {
             const dot = document.getElementById("statusDot");
             const text = document.getElementById("statusText");
-            dot.className = `w-2.5 h-2.5 rounded-full ${isOnline ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`;
+            if (!dot || !text) return;
             text.textContent = label;
+            dot.className = connected
+                ? "w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                : "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            if (!container) return;
+            const toast = document.createElement("div");
+            const isErr = type === "error";
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-300 ${
+                isErr
+                    ? "bg-rose-950/95 border-rose-500/60 text-rose-100"
+                    : "bg-slate-900/95 border-emerald-500/50 text-emerald-100"
+            }`;
+            toast.innerHTML = `<span>${isErr ? "⚠️" : "✅"}</span><span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateY(8px)";
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
         }
 
         // =========================================================================
-        // 4. 作成者フィルタ同期 ＆ レンダリング
+        // 4. 作成者絞り込み同期 ＆ プラグイン一覧カード描画
         // =========================================================================
         function syncAuthorDropdown() {
             const select = document.getElementById("authorSelect");
-            const uniqueAuthors = Array.from(
-                new Set(plugins.map(p => (p.author || "匿名クリエイター").trim()).filter(Boolean))
-            ).sort((a, b) => a.localeCompare(b, "ja"));
-
-            const prev = selectedAuthor;
-            select.innerHTML = `<option value="all">👤 すべての作成者 (${uniqueAuthors.length})</option>`;
-            uniqueAuthors.forEach(author => {
-                const opt = document.createElement("option");
-                opt.value = author;
-                opt.textContent = `👤 ${author}`;
-                select.appendChild(opt);
-            });
-
-            if (prev !== "all" && uniqueAuthors.includes(prev)) {
-                select.value = prev;
-            } else {
-                selectedAuthor = "all";
-                select.value = "all";
-            }
-
             const chip = document.getElementById("activeAuthorChip");
             const chipName = document.getElementById("activeAuthorChipName");
+            if (!select) return;
+
+            const authorCounts = new Map();
+            plugins.forEach(p => {
+                const name = (p.author || "匿名クリエイター").trim();
+                authorCounts.set(name, (authorCounts.get(name) || 0) + 1);
+            });
+
+            const sortedAuthors = Array.from(authorCounts.entries()).sort((a, b) => b[1] - a[1]);
+            select.innerHTML = `<option value="all">👤 すべての作成者 (${plugins.length})</option>` +
+                sortedAuthors.map(([name, count]) =>
+                    `<option value="${escapeHtml(name)}">👤 ${escapeHtml(name)} (${count})</option>`
+                ).join("");
+
+            if (selectedAuthor !== "all" && !authorCounts.has(selectedAuthor)) {
+                selectedAuthor = "all";
+            }
+            select.value = selectedAuthor;
+
             if (selectedAuthor !== "all") {
                 chipName.textContent = selectedAuthor;
                 chip.classList.remove("hidden");
@@ -671,63 +677,58 @@
         }
 
         function filterByAuthor(authorName) {
-            const clean = (authorName || "匿名クリエイター").trim();
-            selectedAuthor = clean;
+            selectedAuthor = authorName || "all";
             syncAuthorDropdown();
             renderPlugins();
         }
 
         function renderPlugins() {
-            const grid = document.getElementById("pluginGrid");
             const loadingBox = document.getElementById("loadingBox");
             const emptyBox = document.getElementById("emptyBox");
+            const grid = document.getElementById("pluginGrid");
             const resultCount = document.getElementById("resultCount");
 
             loadingBox.classList.add("hidden");
 
             const q = searchQuery.trim().toLowerCase();
-
-            let list = plugins.filter(p => {
-                const tags = getPluginTags(p);
+            let filtered = plugins.filter(p => {
                 const author = (p.author || "匿名クリエイター").trim();
-
-                if (selectedTag !== "all" && !tags.includes(selectedTag)) return false;
                 if (selectedAuthor !== "all" && author !== selectedAuthor) return false;
 
-                if (!q) return true;
-                return (
-                    (p.title || "").toLowerCase().includes(q) ||
-                    (p.description || "").toLowerCase().includes(q) ||
-                    author.toLowerCase().includes(q) ||
-                    (p.file_name || "").toLowerCase().includes(q) ||
-                    (p.code || "").toLowerCase().includes(q)
-                );
+                const tags = getPluginTags(p);
+                if (selectedTag !== "all" && !tags.includes(selectedTag)) return false;
+
+                if (q) {
+                    const hay = `${p.title || ""} ${p.description || ""} ${author} ${p.file_name || ""} ${p.code || ""}`.toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
             });
 
-            // 並べ替え
-            if (currentSort === "likes") {
-                list.sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0) || new Date(b.created_at) - new Date(a.created_at));
-            } else if (currentSort === "downloads") {
-                list.sort((a, b) => (Number(b.downloads) || 0) - (Number(a.downloads) || 0) || new Date(b.created_at) - new Date(a.created_at));
-            } else {
-                list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            }
+            // 並び替え
+            filtered.sort((a, b) => {
+                if (currentSort === "likes") {
+                    const diff = (Number(b.likes) || 0) - (Number(a.likes) || 0);
+                    if (diff !== 0) return diff;
+                } else if (currentSort === "downloads") {
+                    const diff = (Number(b.downloads) || 0) - (Number(a.downloads) || 0);
+                    if (diff !== 0) return diff;
+                }
+                return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+            });
 
-            resultCount.textContent = list.length;
+            resultCount.textContent = filtered.length.toLocaleString();
 
-            if (list.length === 0) {
+            if (filtered.length === 0) {
                 grid.classList.add("hidden");
                 emptyBox.classList.remove("hidden");
-
-                const emptyTitle = document.getElementById("emptyTitle");
-                const emptySubtitle = document.getElementById("emptySubtitle");
-                if (plugins.length === 0) {
-                    emptyTitle.textContent = "まだプラグインが投稿されていません";
-                    emptySubtitle.textContent = "最初のクリエイターとして、あなたの自作 .shml プラグインをコミュニティに共有しましょう！";
-                } else {
-                    emptyTitle.textContent = "条件に一致するプラグインが見つかりません";
-                    emptySubtitle.textContent = "検索キーワード・ブロックタグ・作成者フィルタを解除してお試しください。";
-                }
+                const hasFilter = Boolean(q || selectedTag !== "all" || selectedAuthor !== "all");
+                document.getElementById("emptyTitle").textContent = hasFilter
+                    ? "条件に一致するプラグインが見つかりません"
+                    : "まだプラグインが投稿されていません";
+                document.getElementById("emptySubtitle").textContent = hasFilter
+                    ? "検索キーワードや作成者・ブロックタグの絞り込みを解除してお試しください。"
+                    : "最初のクリエイターとして、あなたの自作 `.shml` プラグインをコミュニティに共有しましょう！";
                 return;
             }
 
@@ -735,111 +736,105 @@
             grid.classList.remove("hidden");
             grid.innerHTML = "";
 
-            list.forEach(plugin => {
-                const tags = getPluginTags(plugin);
+            filtered.forEach(plugin => {
                 const isLiked = likedIds.has(String(plugin.id));
+                const authorName = (plugin.author || "匿名クリエイター").trim();
+                const tags = getPluginTags(plugin);
                 const likesCount = Number(plugin.likes) || 0;
                 const dlCount = Number(plugin.downloads) || 0;
-                const authorName = (plugin.author || "匿名クリエイター").trim();
 
                 const card = document.createElement("article");
-                card.className = "plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4";
-
-                const tagsHtml = tags.length > 0
-                    ? tags.map(t => `<span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md border ${getTagStyle(t)}">${escapeHtml(t)}</span>`).join("")
-                    : `<span class="text-[10px] font-mono px-2 py-0.5 rounded-md border bg-slate-800/60 text-slate-400 border-slate-700">[shml]</span>`;
+                card.className = "plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4 cursor-pointer";
+                card.onclick = () => openDetailModal(plugin);
 
                 card.innerHTML = `
                     <div class="space-y-3">
-                        <!-- 上部メタ：ファイル名 ＆ カウントバッジ -->
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-[11px] font-mono text-slate-300 bg-slate-950/90 px-2.5 py-1 rounded-lg border border-slate-800 truncate max-w-[55%]">
+                            <span class="text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-2.5 py-0.5 rounded-lg truncate max-w-[65%]">
                                 📄 ${escapeHtml(plugin.file_name || "plugin.shml")}
                             </span>
-                            <div class="flex items-center gap-1.5 flex-none">
-                                <button type="button" class="card-like-btn inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                                    isLiked
-                                        ? "bg-rose-500/20 text-rose-300 border-rose-500/50"
-                                        : "bg-slate-950/90 text-slate-300 border-slate-800 hover:border-rose-500/40"
-                                }" title="いいね！">
-                                    <span>${isLiked ? "❤️" : "🤍"}</span>
-                                    <span>${likesCount.toLocaleString()}</span>
-                                </button>
-                                <span class="inline-flex items-center gap-1 text-xs font-extrabold text-sky-300 bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-lg" title="ダウンロード数">
-                                    <span>⬇️</span>
-                                    <span>${dlCount.toLocaleString()}</span>
-                                </span>
-                            </div>
+                            <span class="text-[11px] text-slate-400 flex-none">
+                                ${formatDateTime(plugin.created_at)}
+                            </span>
                         </div>
 
-                        <!-- タイトル ＆ 作成者 ＆ 日時 -->
-                        <div class="space-y-1">
-                            <h2 class="text-base font-extrabold text-white line-clamp-2 leading-snug">
-                                ${escapeHtml(plugin.title)}
-                            </h2>
-                            <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                                <button type="button" class="card-author-btn inline-flex items-center gap-1 text-slate-300 hover:text-sky-300 font-semibold transition cursor-pointer" title="この作成者で絞り込む">
-                                    <span>👤</span>
-                                    <span class="underline decoration-slate-700 hover:decoration-sky-400">${escapeHtml(authorName)}</span>
-                                </button>
-                                <span>•</span>
-                                <span>${formatDateTime(plugin.created_at)}</span>
-                            </div>
-                        </div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white line-clamp-2 leading-snug">
+                            ${escapeHtml(plugin.title)}
+                        </h3>
 
-                        <!-- 概要（3行クランプ） -->
-                        <p class="text-xs text-slate-300/90 line-clamp-3 leading-relaxed min-h-[3.375rem]">
+                        <p class="text-xs sm:text-sm text-slate-300 line-clamp-3 leading-relaxed min-h-[3.75rem]">
                             ${escapeHtml(plugin.description || "説明文はありません。")}
                         </p>
 
-                        <!-- 検出タグ -->
-                        <div class="flex flex-wrap gap-1.5 pt-0.5">
-                            ${tagsHtml}
+                        <div class="flex flex-wrap gap-1.5">
+                            ${tags.length > 0
+                                ? tags.map(t => `<span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md border ${getTagStyle(t)}">${escapeHtml(t)}</span>`).join("")
+                                : `<span class="text-[10px] font-mono px-2 py-0.5 rounded-md border bg-slate-800/60 text-slate-400 border-slate-700">[shml]</span>`
+                            }
                         </div>
                     </div>
 
-                    <!-- クイックアクションボタン -->
-                    <div class="pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2">
-                        <button type="button" class="card-detail-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 text-xs font-bold transition cursor-pointer">
-                            <span>詳細・コード</span>
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <button type="button" data-action="author" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-sky-300 truncate max-w-[44%] transition cursor-pointer" title="この作成者で絞り込む">
+                            <span>👤</span>
+                            <span class="truncate underline decoration-slate-700 hover:decoration-sky-400">${escapeHtml(authorName)}</span>
                         </button>
-                        <button type="button" class="card-dl-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-400/30 text-xs font-extrabold transition cursor-pointer">
-                            <span>⬇️ DL (.shml)</span>
-                        </button>
+
+                        <div class="flex items-center gap-1.5 flex-none">
+                            <button type="button" data-action="like" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-extrabold transition cursor-pointer ${
+                                isLiked
+                                    ? "bg-rose-500/20 border-rose-500/50 text-rose-200"
+                                    : "bg-slate-900/90 border-slate-700 text-slate-300 hover:border-rose-500/50"
+                            }" title="いいね">
+                                <span>${isLiked ? "❤️" : "🤍"}</span>
+                                <span>${likesCount.toLocaleString()}</span>
+                            </button>
+
+                            <button type="button" data-action="download" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-400/30 text-xs font-extrabold transition cursor-pointer" title="ダウンロード">
+                                <span>⬇️</span>
+                                <span>${dlCount.toLocaleString()}</span>
+                            </button>
+                        </div>
                     </div>
                 `;
 
-                // イベントバインド
-                card.querySelector(".card-like-btn").onclick = (e) => {
-                    e.stopPropagation();
-                    toggleLikePlugin(plugin);
-                };
-                card.querySelector(".card-author-btn").onclick = (e) => {
+                card.querySelector('[data-action="author"]').onclick = (e) => {
                     e.stopPropagation();
                     filterByAuthor(authorName);
                 };
-                card.querySelector(".card-detail-btn").onclick = () => openDetailModal(plugin);
-                card.querySelector(".card-dl-btn").onclick = () => downloadPluginFile(plugin);
+                card.querySelector('[data-action="like"]').onclick = (e) => {
+                    e.stopPropagation();
+                    toggleLikePlugin(plugin);
+                };
+                card.querySelector('[data-action="download"]').onclick = (e) => {
+                    e.stopPropagation();
+                    downloadPluginFile(plugin);
+                };
 
                 grid.appendChild(card);
             });
         }
 
         // =========================================================================
-        // 5. いいね機能（楽観的UI更新 + Supabase RPC）
+        // 5. いいね機能（連打ロック + 楽観的UI更新 + Supabase RPC）
         // =========================================================================
         async function toggleLikePlugin(plugin) {
             if (!plugin || !plugin.id) return;
             const idStr = String(plugin.id);
+
+            // 通信中の連打防止ロック
+            if (likingInProgress.has(idStr)) return;
+            likingInProgress.add(idStr);
+
             const alreadyLiked = likedIds.has(idStr);
-            const currentLikes = Number(plugin.likes) || 0;
+            const prevLikes = Number(plugin.likes) || 0;
 
             if (alreadyLiked) {
                 likedIds.delete(idStr);
-                plugin.likes = Math.max(0, currentLikes - 1);
+                plugin.likes = Math.max(0, prevLikes - 1);
             } else {
                 likedIds.add(idStr);
-                plugin.likes = currentLikes + 1;
+                plugin.likes = prevLikes + 1;
             }
             saveLikedIds();
             renderPlugins();
@@ -847,14 +842,29 @@
                 syncDetailLikeUI(plugin);
             }
 
-            if (supabaseClient) {
-                try {
+            try {
+                if (supabaseClient) {
                     const rpcName = alreadyLiked ? "decrement_shml_likes" : "increment_shml_likes";
                     const { error } = await supabaseClient.rpc(rpcName, { plugin_id: plugin.id });
                     if (error) throw error;
-                } catch (err) {
-                    console.error("いいね同期エラー:", err);
                 }
+            } catch (err) {
+                console.error("いいね同期エラー:", err);
+                // RPC失敗時はローカル状態もロールバック
+                if (alreadyLiked) {
+                    likedIds.add(idStr);
+                } else {
+                    likedIds.delete(idStr);
+                }
+                plugin.likes = prevLikes;
+                saveLikedIds();
+                renderPlugins();
+                if (activeDetailPlugin && String(activeDetailPlugin.id) === idStr) {
+                    syncDetailLikeUI(plugin);
+                }
+                showToast("いいねの同期に失敗しました（SQL関数を確認してください）", "error");
+            } finally {
+                likingInProgress.delete(idStr);
             }
         }
 
@@ -1307,8 +1317,13 @@
 
         function isWebSocketAllowed() {
             try {
-                // Canvas プレビュー環境（about:srcdoc 等）では WebSocket がセキュリティ制限されているため事前判定
-                if (window.location.protocol === "about:" || window.location.href.startsWith("about:srcdoc")) {
+                // Canvas プレビュー環境（iframe内や about:srcdoc 等）では WebSocket が禁止されているため事前判定
+                if (
+                    window.self !== window.top ||
+                    window.location.protocol === "about:" ||
+                    window.location.href.startsWith("about:") ||
+                    !window.location.hostname
+                ) {
                     return false;
                 }
                 return typeof window.WebSocket === "function";
@@ -1321,15 +1336,8 @@
             lucide.createIcons();
             loadLikedIds();
 
-            // Canvas サンドボックス内で非同期に発生する WebSocket SecurityError のグローバル出力を抑制
-            window.addEventListener("error", (ev) => {
-                if (ev && ev.message && ev.message.includes("WebSocket") && ev.message.includes("not allowed in Canvas")) {
-                    ev.preventDefault();
-                    startPollingFallback();
-                }
-            });
-
             try {
+                const wsAllowed = isWebSocketAllowed();
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
                     realtime: {
                         params: { eventsPerSecond: 5 }
@@ -1338,33 +1346,18 @@
                 await fetchPlugins();
                 updateConnectionBadge(true, "🌐 オンライン同期中");
 
-                // GitHub Pages 等 WebSocket 許可環境では Realtime 購読、Canvas プレビュー環境ではポーリング同期を使用
-                if (isWebSocketAllowed()) {
+                // GitHub Pages 等トップレベル環境では Realtime 購読、Canvas プレビュー環境ではポーリング同期を使用
+                if (wsAllowed) {
                     try {
                         realtimeChannel = supabaseClient
-                            .channel("public:shml_plugins")
-                            .on("postgres_changes", { event: "*", schema: "public", table: "shml_plugins" }, (payload) => {
-                                if (payload.eventType === "INSERT") {
-                                    if (!plugins.some(p => String(p.id) === String(payload.new.id))) {
-                                        plugins.unshift(payload.new);
-                                    }
-                                } else if (payload.eventType === "UPDATE") {
-                                    const idx = plugins.findIndex(p => String(p.id) === String(payload.new.id));
-                                    if (idx !== -1) plugins[idx] = payload.new;
-                                    if (activeDetailPlugin && String(activeDetailPlugin.id) === String(payload.new.id)) {
-                                        activeDetailPlugin = payload.new;
-                                        document.getElementById("detailDownloadBadge").textContent = `⬇️ ${(Number(payload.new.downloads) || 0).toLocaleString()}`;
-                                        syncDetailLikeUI(payload.new);
-                                    }
-                                } else if (payload.eventType === "DELETE") {
-                                    plugins = plugins.filter(p => String(p.id) !== String(payload.old.id));
-                                    if (activeDetailPlugin && String(activeDetailPlugin.id) === String(payload.old.id)) {
-                                        closeDetailModal();
-                                    }
+                            .channel("shml-hub-global-realtime")
+                            .on(
+                                "postgres_changes",
+                                { event: "*", schema: "public", table: "shml_plugins" },
+                                async () => {
+                                    await fetchPlugins();
                                 }
-                                syncAuthorDropdown();
-                                renderPlugins();
-                            })
+                            )
                             .subscribe((status) => {
                                 if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
                                     startPollingFallback();
@@ -1378,9 +1371,9 @@
                 }
             } catch (err) {
                 console.error("Supabase 初期化エラー:", err);
-                updateConnectionBadge(false, "⚠️ 接続エラー");
                 document.getElementById("loadingBox").classList.add("hidden");
-                showToast("データベースへの接続に失敗しました", "error");
+                updateConnectionBadge(false, "⚠️ 接続リトライ中...");
+                showToast("データベース接続に失敗しました: " + (err.message || "通信エラー"), "error");
             }
         }
 
