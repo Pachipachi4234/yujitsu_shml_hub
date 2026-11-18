@@ -1,1491 +1,1390 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YuJitsu SHML Hub — 独自プラグイン共有コミュニティ</title>
+    <title>YuJitsu SHML Hub — ユージツ プラグイン共有コミュニティ</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS v2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            background-color: #0d1117;
-            color: #c9d1d9;
+            background-color: #090d14;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%);
+            color: #e2e8f0;
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
         }
-        .font-mono-code {
-            font-family: 'JetBrains Mono', monospace;
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.65);
+        }
+        .plugin-card {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.7);
+            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .plugin-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(16, 185, 129, 0.55);
+            box-shadow: 0 14px 30px -8px rgba(16, 185, 129, 0.18);
         }
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0d1117;
+            background: #090d14;
         }
         ::-webkit-scrollbar-thumb {
-            background: #30363d;
-            border-radius: 4px;
+            background: #334155;
+            border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #484f58;
+            background: #475569;
         }
-        .plugin-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-        }
-        .plugin-card:hover {
-            transform: translateY(-3px);
-            border-color: #238636;
-            box-shadow: 0 10px 25px -5px rgba(35, 134, 54, 0.22);
-        }
+        /* SHML シンタックスハイライト用 */
+        .shml-directive { color: #c084fc; font-weight: 700; }
+        .shml-comment { color: #64748b; font-style: italic; }
+        .shml-tag { color: #38bdf8; }
+        .shml-string { color: #34d399; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
 
-    <!-- ヘッダー -->
-    <header class="sticky top-0 z-30 bg-[#161b22]/95 backdrop-blur border-b border-[#30363d]">
+    <!-- ========================================== -->
+    <!-- ヘッダー                                   -->
+    <!-- ========================================== -->
+    <header class="sticky top-0 z-30 glass-panel border-b border-slate-800/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-            <!-- 左側：ロゴ＆サブタイトル -->
+            <!-- ブランドロゴ＆タイトル -->
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#58a6ff] flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
-                    🔌
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="plug-zap" class="w-5 h-5 stroke-[2.5]"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">
-                            🔌 YuJitsu <span class="text-[#58a6ff]">SHML Hub</span>
+                            YuJitsu <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-sky-400">SHML Hub</span>
                         </h1>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-[#58a6ff] border border-sky-500/30">
-                            PUBLIC STORE
+                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                            COMMUNITY
                         </span>
                     </div>
-                    <p class="text-xs text-gray-400">YuJitsu ThumbnailMaker 専用プラグイン共有コミュニティ</p>
+                    <p class="text-xs text-slate-400">ユージツ プラグイン共有コミュニティ</p>
                 </div>
             </div>
 
-            <!-- 右側：グローバル同期ステータス・アップロードボタン -->
-            <div class="flex flex-wrap items-center gap-2 ml-auto">
-                <div class="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-200 bg-[#0d1117] px-3 py-2 rounded-xl border border-[#30363d]">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
+            <!-- 同期ステータス＆投稿ボタン -->
+            <div class="flex items-center gap-2.5 ml-auto">
+                <div id="syncStatusPill" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-bold text-slate-200">
+                    <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
                     <span id="statusText">接続中...</span>
                 </div>
-                <button id="openUploadModalBtn" class="bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-500/40 transition flex items-center gap-2 cursor-pointer">
-                    <span>📤</span>
-                    <span>プラグインをアップロード</span>
+                <button id="openUploadBtn" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-900/40 border border-emerald-400/30 transition cursor-pointer">
+                    <span>＋ プラグインを投稿</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- メインコンテンツ -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5">
+    <!-- ========================================== -->
+    <!-- メインコンテンツ                           -->
+    <!-- ========================================== -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-        <!-- コントロールバー（検索・並べ替え・ブロックフィルタ） -->
-        <section class="bg-[#161b22] border border-[#30363d] rounded-2xl p-4 shadow-md space-y-3.5">
-            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-                <!-- 検索ボックス -->
-                <div class="relative flex-1">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+        <!-- 検索・絞り込み・並べ替えコントロール -->
+        <section class="glass-panel rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+            <!-- 1段目：検索ボックス ＆ 作成者ドロップダウン ＆ 並べ替え -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                <!-- キーワード検索 -->
+                <div class="relative lg:col-span-5">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                     <input
                         type="text"
                         id="searchInput"
-                        placeholder="タイトル・作者名・概要・SHMLブロックタグでリアルタイム検索..."
-                        class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl pl-10 pr-9 py-2.5 text-sm text-white placeholder-gray-500 transition"
+                        placeholder="タイトル・説明・作成者・ファイル名・コード検索..."
+                        class="w-full bg-slate-950/90 border border-slate-700/80 focus:border-emerald-400 focus:outline-none rounded-xl pl-10 pr-9 py-2.5 text-sm text-white placeholder-slate-500 transition"
                     >
-                    <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs px-1.5 py-0.5 rounded cursor-pointer">
-                        ✕
+                    <button id="clearSearchBtn" title="検索クリア" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
 
-                <!-- 並べ替えボタン＆公開件数 -->
-                <div class="flex flex-wrap items-center justify-between md:justify-end gap-2">
-                    <div class="inline-flex bg-[#0d1117] p-1 rounded-xl border border-[#30363d]">
-                        <button id="sortNewestBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer">
+                <!-- 作成者フィルタドロップダウン -->
+                <div class="lg:col-span-3">
+                    <div class="relative">
+                        <select
+                            id="authorSelect"
+                            class="w-full appearance-none bg-slate-950/90 border border-slate-700/80 focus:border-sky-400 focus:outline-none rounded-xl pl-3.5 pr-9 py-2.5 text-xs sm:text-sm font-semibold text-slate-200 cursor-pointer transition"
+                        >
+                            <option value="all">👤 すべての作成者</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- 並べ替え（3種） -->
+                <div class="lg:col-span-4 flex flex-wrap items-center justify-between lg:justify-end gap-2">
+                    <div class="inline-flex bg-slate-950/90 p-1 rounded-xl border border-slate-800 w-full sm:w-auto justify-between sm:justify-start">
+                        <button data-sort="newest" class="sort-btn flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white cursor-pointer">
                             🆕 新着順
                         </button>
-                        <button id="sortPopularBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer">
-                            🔥 人気順（DL数）
+                        <button data-sort="likes" class="sort-btn flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer">
+                            ❤️ いいね順
                         </button>
-                    </div>
-                    <div class="text-xs text-gray-400 bg-[#0d1117] px-3 py-2 rounded-xl border border-[#30363d]">
-                        表示中: <span id="pluginCountLabel" class="font-bold text-[#58a6ff]">0</span> 件
+                        <button data-sort="downloads" class="sort-btn flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer">
+                            ⬇️ ダウンロード数順
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- ブロックフィルタタグ -->
-            <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[#30363d]/70">
-                <span class="text-[11px] text-gray-400 mr-1 font-bold">ブロック絞り込み:</span>
-                <div id="blockFilterGroup" class="flex flex-wrap gap-1.5">
-                    <button data-block="all" class="block-filter-btn active px-2.5 py-1 rounded-lg text-xs font-bold border transition bg-[#58a6ff] text-[#0d1117] border-[#58a6ff] cursor-pointer">
-                        すべて
-                    </button>
-                    <button data-block="[change]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
-                        [change]
-                    </button>
-                    <button data-block="[javascript]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
-                        [javascript]
-                    </button>
-                    <button data-block="[html]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
-                        [html]
-                    </button>
-                    <button data-block="[python]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
-                        [python]
-                    </button>
-                    <button data-block="[java]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
-                        [java]
-                    </button>
-                    <button data-block="[php]" class="block-filter-btn px-2.5 py-1 rounded-lg text-xs font-mono-code font-semibold border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer">
-                        [php]
-                    </button>
+            <!-- 2段目：SHMLブロックタグフィルタ ＆ アクティブ作成者チップ ＆ 件数 -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-bold text-slate-400 mr-1">ブロック絞り込み:</span>
+                    <div id="tagFilterContainer" class="flex flex-wrap gap-1.5">
+                        <button data-tag="all" class="tag-pill px-3 py-1 rounded-lg text-xs font-bold border transition bg-sky-500 text-slate-950 border-sky-400 cursor-pointer">
+                            すべて
+                        </button>
+                        <button data-tag="[change]" class="tag-pill px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border transition bg-slate-950/80 text-slate-300 border-slate-700/80 hover:border-sky-400 cursor-pointer">
+                            [change]
+                        </button>
+                        <button data-tag="[html]" class="tag-pill px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border transition bg-slate-950/80 text-slate-300 border-slate-700/80 hover:border-sky-400 cursor-pointer">
+                            [html]
+                        </button>
+                        <button data-tag="[javascript]" class="tag-pill px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border transition bg-slate-950/80 text-slate-300 border-slate-700/80 hover:border-sky-400 cursor-pointer">
+                            [javascript]
+                        </button>
+                        <button data-tag="[css]" class="tag-pill px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border transition bg-slate-950/80 text-slate-300 border-slate-700/80 hover:border-sky-400 cursor-pointer">
+                            [css]
+                        </button>
+                        <button data-tag="[style]" class="tag-pill px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border transition bg-slate-950/80 text-slate-300 border-slate-700/80 hover:border-sky-400 cursor-pointer">
+                            [style]
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 ml-auto">
+                    <!-- 作成者絞り込み中のアクティブチップ -->
+                    <div id="activeAuthorChip" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/20 border border-sky-400/50 text-sky-200 text-xs font-bold">
+                        <span>👤 <span id="activeAuthorChipName"></span></span>
+                        <button id="clearAuthorChipBtn" class="hover:text-white bg-sky-500/30 hover:bg-sky-500/50 rounded px-1.5 py-0.2 transition cursor-pointer" title="作成者絞り込みを解除">×</button>
+                    </div>
+
+                    <div class="text-xs text-slate-400 bg-slate-950/90 px-3 py-1.5 rounded-xl border border-slate-800">
+                        表示中: <span id="resultCount" class="font-extrabold text-emerald-400">0</span> 件
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- ローディング表示 -->
-        <div id="loadingState" class="py-20 text-center space-y-3">
-            <div class="inline-block w-8 h-8 border-4 border-[#30363d] border-t-[#238636] rounded-full animate-spin"></div>
-            <p class="text-sm text-gray-400">プラグイン一覧を読み込み中...</p>
+        <!-- ローディング状態 -->
+        <div id="loadingBox" class="py-24 text-center space-y-3">
+            <div class="inline-block w-9 h-9 border-4 border-slate-800 border-t-emerald-400 rounded-full animate-spin"></div>
+            <p class="text-sm text-slate-400 font-medium">グローバルデータベースからプラグインを取得中...</p>
         </div>
 
-        <!-- 検索結果0件表示 -->
-        <div id="emptyState" class="hidden py-20 text-center bg-[#161b22] border border-[#30363d] rounded-2xl p-6 space-y-2">
-            <div class="text-4xl">🔎</div>
-            <h3 class="text-base font-bold text-white">条件に一致する .shml プラグインが見つかりませんでした</h3>
-            <p class="text-xs text-gray-400">検索条件やブロックフィルタを変更するか、右上のボタンから新しいプラグインを公開しましょう！</p>
+        <!-- 0件 / 未投稿エンプティステート -->
+        <div id="emptyBox" class="hidden glass-panel rounded-2xl py-20 px-6 text-center space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl">
+                🧩
+            </div>
+            <div class="space-y-1.5 max-w-md mx-auto">
+                <h2 id="emptyTitle" class="text-lg font-extrabold text-white">まだプラグインが投稿されていません</h2>
+                <p id="emptySubtitle" class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                    最初のクリエイターとして、あなたの自作 `.shml` プラグインをコミュニティに共有しましょう！
+                </p>
+            </div>
+            <div class="pt-1">
+                <button id="emptyUploadBtn" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-lg transition cursor-pointer">
+                    <span>＋ 最初のプラグインを投稿する</span>
+                </button>
+            </div>
         </div>
 
-        <!-- ホーム一覧（グリッドカード表示） -->
-        <section id="pluginGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden">
-            <!-- JSで動的生成 -->
+        <!-- プラグインカード一覧グリッド -->
+        <section id="pluginGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- JSにより動的生成 -->
         </section>
 
     </main>
 
     <!-- フッター -->
-    <footer class="border-t border-[#30363d] bg-[#161b22] py-4 px-4 text-center text-xs text-gray-500">
-        YuJitsu SHML Hub — ThumbnailMaker Pro プラグイン共有コミュニティ
+    <footer class="border-t border-slate-800/80 bg-slate-950/60 py-5 px-4 text-center text-xs text-slate-500">
+        YuJitsu SHML Hub — ユージツ プラグイン共有コミュニティ
     </footer>
 
     <!-- ========================================== -->
-    <!-- モーダル①：プラグイン詳細＆ダウンロード -->
+    <!-- モーダル①：詳細＆コード閲覧＆削除モーダル -->
     <!-- ========================================== -->
-    <div id="detailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-start justify-between gap-4">
-                <div class="space-y-1.5 min-w-0">
+    <div id="detailModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
+        <div class="glass-panel border border-slate-700/90 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- モーダルヘッダー -->
+            <div class="px-5 py-4 bg-slate-950/90 border-b border-slate-800 flex items-start justify-between gap-4">
+                <div class="space-y-2 min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span id="detailFileNameBadge" class="text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg">
+                        <span id="detailFileBadge" class="text-[11px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg">
                             plugin.shml
                         </span>
-                        <span id="detailDownloadsBadge" class="text-[11px] font-extrabold bg-sky-500/15 text-[#58a6ff] border border-sky-500/30 px-2.5 py-0.5 rounded-lg">
+                        <span id="detailDownloadBadge" class="text-[11px] font-extrabold bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-lg">
                             ⬇️ 0
                         </span>
                     </div>
                     <h2 id="detailTitle" class="text-lg sm:text-xl font-extrabold text-white break-words">
                         プラグインタイトル
                     </h2>
-                    <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                        <span>👤 作者: <strong id="detailAuthor" class="text-gray-200">匿名クリエイター</strong></span>
-                        <span>🕒 投稿日時: <span id="detailDate">2026/01/01 00:00</span></span>
+                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                        <button id="detailAuthorBtn" class="inline-flex items-center gap-1 text-slate-200 hover:text-sky-300 font-semibold transition cursor-pointer" title="この作成者で絞り込む">
+                            <span>👤</span>
+                            <span id="detailAuthorText" class="underline decoration-slate-600 hover:decoration-sky-400">匿名クリエイター</span>
+                        </button>
+                        <span>🕒 <span id="detailDateText">2026/01/01 00:00</span></span>
                     </div>
                 </div>
-                <button id="closeDetailModalBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer flex-none">
-                    ✕
+                <button id="closeDetailBtn" class="text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer flex-none">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
+            <!-- モーダルボディ -->
             <div class="p-5 overflow-y-auto space-y-5 flex-1">
+                <!-- ブロックタグ -->
                 <div class="space-y-1.5">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">🧩 使用されているSHMLブロック</h3>
-                    <div id="detailTagsRow" class="flex flex-wrap gap-1.5"></div>
+                    <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">🧩 検出されたSHMLブロック</h3>
+                    <div id="detailTagsContainer" class="flex flex-wrap gap-1.5"></div>
                 </div>
 
+                <!-- 説明 -->
                 <div class="space-y-1.5">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-[#58a6ff]">📖 概要・使い方</h3>
-                    <div id="detailDescription" class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed"></div>
+                    <h3 class="text-[11px] font-bold uppercase tracking-wider text-sky-400">📖 概要・使い方</h3>
+                    <div id="detailDescription" class="bg-slate-950/85 border border-slate-800 rounded-xl p-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed"></div>
                 </div>
 
+                <!-- ソースコードビューア -->
                 <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">💻 .shml スクリプトコード</h3>
-                        <button id="copyCodeBtn" class="text-xs bg-[#0d1117] hover:bg-[#30363d] text-gray-200 border border-[#30363d] px-3 py-1.5 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5">
-                            <span>📋</span>
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">💻 .shml ソースコード</h3>
+                        <button id="detailCopyBtn" class="inline-flex items-center gap-1.5 text-xs bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                             <span>コードをコピー</span>
                         </button>
                     </div>
-                    <pre id="detailCodePreview" class="bg-[#010409] border border-[#30363d] rounded-xl p-4 text-xs font-mono-code text-emerald-300 overflow-x-auto max-h-64 leading-relaxed"></pre>
+                    <pre id="detailCodeViewer" class="bg-[#060910] border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-200 overflow-x-auto max-h-72 leading-relaxed"></pre>
+                </div>
+
+                <!-- 削除セクション（インラインパスワード確認） -->
+                <div class="pt-3 border-t border-slate-800/80">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <button id="toggleDeletePromptBtn" type="button" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-950/30 hover:bg-rose-950/60 border border-rose-500/30 px-3 py-2 rounded-xl transition cursor-pointer">
+                            <span>🗑️ このプラグインを削除</span>
+                        </button>
+                        <span id="noPasswordHint" class="hidden text-[11px] text-slate-500">
+                            ※ この投稿には削除用パスワードが設定されていません
+                        </span>
+                    </div>
+
+                    <!-- パスワード入力ボックス -->
+                    <div id="deletePasswordPanel" class="hidden mt-3 bg-rose-950/25 border border-rose-500/40 rounded-xl p-3.5 space-y-2.5">
+                        <p class="text-xs font-bold text-rose-200">
+                            🔑 投稿時に設定した「削除用パスワード」を入力してください
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input
+                                type="password"
+                                id="deletePasswordInput"
+                                placeholder="削除用パスワードを入力..."
+                                class="flex-1 bg-slate-950 border border-rose-500/40 focus:border-rose-400 focus:outline-none rounded-xl px-3.5 py-2 text-xs text-white"
+                            >
+                            <button id="confirmDeleteBtn" type="button" class="bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex-none">
+                                削除を実行
+                            </button>
+                        </div>
+                        <p id="deleteErrorText" class="hidden text-xs font-bold text-rose-400"></p>
+                    </div>
                 </div>
             </div>
 
-            <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p class="text-[11px] text-gray-400">
-                    ※ ThumbnailMaker Pro 右上の「🔌 プラグイン (.shml) 読込」から適用できます
-                </p>
-                <button id="downloadShmlBtn" class="w-full sm:w-auto bg-[#238636] hover:bg-[#2ea043] active:scale-[0.98] text-white font-extrabold text-sm px-6 py-2.5 rounded-xl shadow-lg border border-emerald-500/40 transition flex items-center justify-center gap-2 cursor-pointer">
-                    <span>⬇️</span>
-                    <span>.shml ファイルをダウンロード</span>
+            <!-- モーダルフッター -->
+            <div class="px-5 py-3.5 bg-slate-950/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <!-- いいねボタン -->
+                <button id="detailLikeBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-extrabold text-xs sm:text-sm transition cursor-pointer bg-slate-900 border-slate-700 text-slate-200 hover:border-rose-500/60">
+                    <span id="detailLikeHeart">🤍</span>
+                    <span>いいね</span>
+                    <span id="detailLikeCount" class="px-2 py-0.5 rounded-md bg-slate-800 text-xs">0</span>
+                </button>
+
+                <!-- ダウンロードボタン -->
+                <button id="detailDownloadBtn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-900/40 border border-emerald-400/30 transition cursor-pointer">
+                    <span>⬇️ DL (.shml)</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- モーダル②：新規プラグインアップロード -->
+    <!-- モーダル②：新規プラグイン投稿モーダル       -->
     <!-- ========================================== -->
-    <div id="uploadModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="px-5 py-4 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">📤</span>
-                    <h2 class="text-base sm:text-lg font-extrabold text-white">新規 .shml プラグインを公開</h2>
+    <div id="uploadModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
+        <div class="glass-panel border border-slate-700/90 rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- ヘッダー -->
+            <div class="px-5 py-4 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    </div>
+                    <h2 class="text-base sm:text-lg font-extrabold text-white">プラグインを投稿</h2>
                 </div>
-                <button id="closeUploadModalBtn" class="text-gray-400 hover:text-white bg-[#161b22] hover:bg-[#30363d] w-8 h-8 rounded-lg flex items-center justify-center font-bold transition cursor-pointer">
-                    ✕
+                <button id="closeUploadBtn" class="text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
+            <!-- フォーム本体 -->
             <form id="uploadForm" class="p-5 overflow-y-auto space-y-4 flex-1">
+                <!-- ドラッグ＆ドロップファイル選択 -->
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1.5">
-                        1. プラグインファイル (.shml / .txt) <span class="text-rose-400">*</span>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">
+                        .shml ファイルを読み込む（または下のコード欄へ直接入力）
                     </label>
-                    <div id="dropZone" class="border-2 border-dashed border-[#30363d] hover:border-[#238636] bg-[#0d1117] rounded-xl p-5 text-center transition cursor-pointer">
-                        <input type="file" id="shmlUploadInput" accept=".shml,.txt" class="hidden">
-                        <div id="dropZoneDefault" class="space-y-1">
-                            <div class="text-2xl">📄</div>
-                            <p class="text-xs sm:text-sm font-bold text-gray-200">クリックしてファイルを選択、またはここにドラッグ＆ドロップ</p>
-                            <p class="text-[11px] text-gray-500">UTF-8 形式の .shml または .txt ファイルに対応</p>
-                        </div>
-                        <div id="dropZoneSelected" class="hidden space-y-1">
-                            <div class="text-2xl">✅</div>
-                            <p id="selectedFileName" class="text-sm font-bold text-emerald-400 font-mono-code"></p>
-                            <p id="selectedFileMeta" class="text-[11px] text-gray-400"></p>
+                    <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-emerald-400 bg-slate-950/70 rounded-xl p-4 text-center transition cursor-pointer">
+                        <input type="file" id="shmlFileInput" accept=".shml,.txt" class="hidden">
+                        <div class="flex flex-col items-center gap-1">
+                            <i data-lucide="file-code-2" class="w-6 h-6 text-emerald-400"></i>
+                            <p id="dropZoneLabel" class="text-xs font-bold text-slate-200">
+                                クリックして .shml ファイルを選択、またはここにドラッグ＆ドロップ
+                            </p>
+                            <p class="text-[11px] text-slate-500">ファイル名・ブロックタグ・コードを自動入力します</p>
                         </div>
                     </div>
                 </div>
 
+                <!-- タイトル ＆ 作成者名 -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label for="uploadTitle" class="block text-xs font-bold text-gray-300 mb-1">
-                            2. プラグインタイトル <span class="text-rose-400">*</span>
+                        <label for="inputTitle" class="block text-xs font-bold text-slate-300 mb-1">
+                            プラグインタイトル <span class="text-rose-400">*</span>
                         </label>
                         <input
                             type="text"
-                            id="uploadTitle"
+                            id="inputTitle"
                             required
                             maxlength="60"
                             placeholder="例: 💬 吹き出しジェネレーター"
-                            class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
+                            class="w-full bg-slate-950/90 border border-slate-700 focus:border-emerald-400 focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
                         >
                     </div>
                     <div>
-                        <label for="uploadAuthor" class="block text-xs font-bold text-gray-300 mb-1">
-                            3. 作者名（任意）
+                        <label for="inputAuthor" class="block text-xs font-bold text-slate-300 mb-1">
+                            作成者名（任意）
                         </label>
                         <input
                             type="text"
-                            id="uploadAuthor"
+                            id="inputAuthor"
                             maxlength="30"
-                            placeholder="未入力時は「匿名クリエイター」"
-                            class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
+                            placeholder="匿名クリエイター"
+                            class="w-full bg-slate-950/90 border border-slate-700 focus:border-sky-400 focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
                         >
                     </div>
                 </div>
 
+                <!-- ファイル名 ＆ 削除用パスワード -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="inputFileName" class="block text-xs font-bold text-slate-300 mb-1">
+                            .shml ファイル名
+                        </label>
+                        <input
+                            type="text"
+                            id="inputFileName"
+                            maxlength="60"
+                            placeholder="例: my_plugin.shml（未入力時は自動生成）"
+                            class="w-full bg-slate-950/90 border border-slate-700 focus:border-emerald-400 focus:outline-none rounded-xl px-3.5 py-2 text-sm font-mono text-white"
+                        >
+                    </div>
+                    <div>
+                        <label for="inputDeletePassword" class="block text-xs font-bold text-slate-300 mb-1">
+                            🔑 削除用パスワード（任意）
+                        </label>
+                        <input
+                            type="password"
+                            id="inputDeletePassword"
+                            maxlength="64"
+                            placeholder="後から自分で削除したい場合に設定"
+                            class="w-full bg-slate-950/90 border border-slate-700 focus:border-rose-400 focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white"
+                        >
+                    </div>
+                </div>
+
+                <!-- 概要・説明 -->
                 <div>
-                    <label for="uploadDescription" class="block text-xs font-bold text-gray-300 mb-1">
-                        4. 概要・使い方 <span class="text-rose-400">*</span>
+                    <label for="inputDescription" class="block text-xs font-bold text-slate-300 mb-1">
+                        概要・使い方
                     </label>
                     <textarea
-                        id="uploadDescription"
-                        required
-                        rows="4"
+                        id="inputDescription"
+                        rows="3"
                         maxlength="1200"
-                        placeholder="プラグインで追加される機能や操作手順を詳しく記入してください。"
-                        class="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white leading-relaxed"
+                        placeholder="このプラグインの機能や操作方法を分かりやすく記入してください。"
+                        class="w-full bg-slate-950/90 border border-slate-700 focus:border-sky-400 focus:outline-none rounded-xl px-3.5 py-2 text-sm text-white leading-relaxed"
                     ></textarea>
                 </div>
 
-                <div id="uploadPreviewBox" class="hidden space-y-1.5">
+                <!-- .shml コード入力 -->
+                <div class="space-y-1.5">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-[11px] font-bold text-gray-400">自動検出されたSHMLブロック:</span>
-                        <div id="uploadDetectedTags" class="flex flex-wrap gap-1"></div>
+                        <label for="inputCode" class="block text-xs font-bold text-slate-300">
+                            .shml コード <span class="text-rose-400">*</span>
+                        </label>
+                        <div id="detectedTagsPreview" class="flex flex-wrap items-center gap-1">
+                            <span class="text-[11px] text-slate-500">タグ自動検出待機中...</span>
+                        </div>
                     </div>
-                    <pre id="uploadCodePreview" class="bg-[#010409] border border-[#30363d] rounded-xl p-3 text-[11px] font-mono-code text-emerald-300 max-h-28 overflow-y-auto"></pre>
+                    <textarea
+                        id="inputCode"
+                        required
+                        rows="7"
+                        placeholder="[change]&#10;# ここに .shml コードを貼り付け、または上のエリアからファイルを読み込んでください"
+                        class="w-full bg-[#060910] border border-slate-700 focus:border-emerald-400 focus:outline-none rounded-xl p-3.5 text-xs font-mono text-emerald-300 leading-relaxed"
+                    ></textarea>
                 </div>
             </form>
 
-            <div class="px-5 py-3.5 bg-[#0d1117] border-t border-[#30363d] flex items-center justify-end gap-2.5">
-                <button type="button" id="cancelUploadBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white bg-[#161b22] border border-[#30363d] cursor-pointer">
+            <!-- フッター -->
+            <div class="px-5 py-3.5 bg-slate-950/90 border-t border-slate-800 flex items-center justify-end gap-2.5">
+                <button type="button" id="cancelUploadBtn" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-900 border border-slate-700 cursor-pointer">
                     キャンセル
                 </button>
-                <button type="submit" form="uploadForm" id="submitUploadBtn" class="bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm px-5 py-2 rounded-xl shadow-lg border border-emerald-500/40 transition flex items-center gap-1.5 cursor-pointer">
-                    <span>🚀</span>
-                    <span>コミュニティに公開する</span>
+                <button type="submit" form="uploadForm" id="submitUploadBtn" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm shadow-lg transition cursor-pointer">
+                    <span>🚀 コミュニティに公開</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- カスタムトースト通知 -->
+    <!-- トースト通知コンテナ -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
         // =========================================================================
-        // ★ Supabase クラウドDB接続設定（固定）
+        // 1. Supabase グローバル設定（ハードコード固定・UI設定モーダルなし）
         // =========================================================================
         const SUPABASE_URL = "https://nqfrmceiwchaeyjlgvil.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_zvWjyDspvXIOt4tJY5cEwA_lsMmw5rs";
 
-        const LOCAL_PLUGINS_STORAGE_KEY = 'yujitsu_shml_hub_local_plugins_v2';
-        let isSeedingStarterPlugins = false;
+        const LIKED_IDS_KEY = "yujitsu_shml_liked_ids_v1";
+        const SAVED_AUTHOR_KEY = "yujitsu_shml_saved_author_v1";
 
-        // トースト通知
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            const colors = type === 'error'
-                ? 'bg-rose-950/95 border-rose-500 text-rose-200'
-                : 'bg-[#161b22]/95 border-[#238636] text-emerald-200';
-            toast.className = `pointer-events-auto border px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 ${colors}`;
-            toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✨'}</span><span>${escapeHtml(message)}</span>`;
-            container.appendChild(toast);
+        // =========================================================================
+        // 2. アプリ状態管理
+        // =========================================================================
+        let supabaseClient = null;
+        let realtimeChannel = null;
+        let pollingIntervalId = null;
 
-            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
-            setTimeout(() => {
-                toast.classList.add('translate-y-2', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3200);
+        let plugins = [];
+        let likedIds = new Set();
+        let searchQuery = "";
+        let selectedTag = "all";
+        let selectedAuthor = "all";
+        let currentSort = "newest"; // 'newest' | 'likes' | 'downloads'
+        let activeDetailPlugin = null;
+
+        // =========================================================================
+        // 3. ユーティリティ関数（SHA-256ハッシュ・タグ検出・コピー・トースト）
+        // =========================================================================
+        function loadLikedIds() {
+            try {
+                const raw = localStorage.getItem(LIKED_IDS_KEY);
+                if (raw) {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr)) likedIds = new Set(arr.map(String));
+                }
+            } catch (e) {}
+        }
+
+        function saveLikedIds() {
+            try {
+                localStorage.setItem(LIKED_IDS_KEY, JSON.stringify(Array.from(likedIds)));
+            } catch (e) {}
+        }
+
+        async function sha256Hex(plainText) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plainText);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
         }
 
         function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(str ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
-        function copyTextSafe(text, successMsg) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            const el = document.createElement("div");
+            const style = type === "error"
+                ? "bg-rose-950/95 border-rose-500/80 text-rose-200"
+                : "bg-slate-900/95 border-emerald-500/80 text-emerald-200";
+            el.className = `pointer-events-auto border px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 transition-all duration-300 translate-y-2 opacity-0 ${style}`;
+            el.innerHTML = `<span>${type === "error" ? "⚠️" : "✨"}</span><span>${escapeHtml(message)}</span>`;
+            container.appendChild(el);
+
+            requestAnimationFrame(() => el.classList.remove("translate-y-2", "opacity-0"));
+            setTimeout(() => {
+                el.classList.add("translate-y-2", "opacity-0");
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
+        function copyTextFallback(text, successMsg) {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
             try {
-                document.execCommand('copy');
+                document.execCommand("copy");
                 showToast(successMsg);
             } catch (e) {
-                showToast('コピーに失敗しました', 'error');
+                showToast("コピーに失敗しました", "error");
             }
-            document.body.removeChild(textarea);
+            document.body.removeChild(ta);
         }
 
-        // SHMLブロック自動検出
-        function detectShmlBlocks(code) {
+        function extractShmlTags(code) {
             const found = new Set();
-            const regex = /^\s*\[(change|javascript|js|html|python|py|java|php)\]/gim;
-            let m;
-            while ((m = regex.exec(code)) !== null) {
-                let tag = m[1].toLowerCase();
-                if (tag === 'js') tag = 'javascript';
-                if (tag === 'py') tag = 'python';
+            const regex = /^\s*\[(change|html|javascript|js|css|style|python|java|php)\]/gim;
+            let match;
+            while ((match = regex.exec(code || "")) !== null) {
+                let tag = match[1].toLowerCase();
+                if (tag === "js") tag = "javascript";
                 found.add(`[${tag}]`);
             }
             return Array.from(found);
         }
 
-        function getTagBadgeStyle(tag) {
-            switch (tag) {
-                case '[change]': return 'bg-purple-500/15 text-purple-300 border-purple-500/30';
-                case '[javascript]': return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
-                case '[html]': return 'bg-rose-500/15 text-rose-300 border-rose-500/30';
-                case '[python]': return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
-                case '[java]': return 'bg-orange-500/15 text-orange-300 border-orange-500/30';
-                case '[php]': return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30';
-                default: return 'bg-gray-500/15 text-gray-300 border-gray-500/30';
-            }
-        }
-
-        // 公式スタータープラグイン3種（すべて初期DL数 0）
-        const INITIAL_SEED_PLUGINS = [
-            {
-                title: '💬 吹き出しプラグイン (緑●変形)',
-                author: 'YuJitsu Dev',
-                description: '左パネルに「💬 吹き出しを追加」ボタンを追加します。\n\n【主な機能】\n・5種類のデザイン（角丸・楕円・四角・もくもく心の声・ギザギザ叫び）をリアルタイム切替\n・しっぽの位置（左下・下・右下・左上・上・右上・左・右・無し）をワンクリック変更\n・キャンバス上の8方向緑●ハンドルを直接ドラッグして図形のように縦横自由変形！\n・塗りつぶし色、枠線の色・太さ、ドロップシャドウも自在に調整できます。',
-                file_name: 'speech_bubble.shml',
-                tags: ['[change]', '[html]', '[javascript]'],
-                downloads: 0,
-                created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-                code: `[change]
-# レイヤー追加パネルに「💬 吹き出しを追加」ボタンを追加
-(+"59")-("💬 吹き出しを追加","{button}")-{button}:<add_speech_bubble>
-_
-[html]
-("1~65"):{
-<div id="speechBubbleInspector" class="space-y-2 bg-[#161b22] p-2.5 rounded border border-emerald-500/60 mt-2 hidden">
-  <div class="flex justify-between items-center border-b border-emerald-500/30 pb-1">
-    <span class="text-[11px] font-bold text-emerald-300">💬 吹き出しプロパティ (緑●ドラッグで変形)</span>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <div>
-      <span class="text-[10px] text-gray-400">吹き出しタイプ</span>
-      <select id="sbStyle" class="input-ui">
-        <option value="round">角丸（定番）</option>
-        <option value="oval">楕円（まる）</option>
-        <option value="rect">四角（テロップ）</option>
-        <option value="cloud">もくもく（心の声）</option>
-        <option value="spike">ギザギザ（叫び）</option>
-      </select>
-    </div>
-    <div>
-      <span class="text-[10px] text-gray-400">しっぽの位置</span>
-      <select id="sbTail" class="input-ui">
-        <option value="bottom-left">左下</option>
-        <option value="bottom-center">下（中央）</option>
-        <option value="bottom-right">右下</option>
-        <option value="top-left">左上</option>
-        <option value="top-center">上（中央）</option>
-        <option value="top-right">右上</option>
-        <option value="left">左</option>
-        <option value="right">右</option>
-        <option value="none">しっぽ無し</option>
-      </select>
-    </div>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <div>
-      <span class="text-[10px] text-gray-400">横幅 (W) <span id="sbWVal" class="text-emerald-300 font-bold">460</span></span>
-      <input type="range" id="sbW" min="100" max="1150" value="460" class="w-full">
-    </div>
-    <div>
-      <span class="text-[10px] text-gray-400">縦幅 (H) <span id="sbHVal" class="text-emerald-300 font-bold">240</span></span>
-      <input type="range" id="sbH" min="60" max="680" value="240" class="w-full">
-    </div>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <div>
-      <span class="text-[10px] text-gray-400">塗りつぶし色</span>
-      <input type="color" id="sbFill" value="#ffffff" class="w-full h-6 rounded cursor-pointer">
-    </div>
-    <div>
-      <span class="text-[10px] text-gray-400">枠線の色</span>
-      <input type="color" id="sbStroke" value="#000000" class="w-full h-6 rounded cursor-pointer">
-    </div>
-  </div>
-  <div class="grid grid-cols-2 gap-2 items-center">
-    <div>
-      <span class="text-[10px] text-gray-400">枠線の太さ <span id="sbLineVal" class="text-emerald-300 font-bold">8</span>px</span>
-      <input type="range" id="sbLine" min="0" max="24" value="8" class="w-full">
-    </div>
-    <label class="flex items-center gap-1.5 text-[11px] text-gray-200 cursor-pointer pt-3">
-      <input type="checkbox" id="sbShadow" checked class="accent-emerald-500">
-      <span>影をつける</span>
-    </label>
-  </div>
-</div>
-}
-_
-[javascript]
-:
-(() => {
-  const inspectorPanel = document.getElementById('inspectorPanel');
-  const sbInspector = document.getElementById('speechBubbleInspector');
-  if (inspectorPanel && sbInspector) inspectorPanel.appendChild(sbInspector);
-
-  function getSbHandles(bw, bh) {
-    const hw = bw / 2, hh = bh / 2;
-    return [
-      { id: 'nw', x: -hw, y: -hh }, { id: 'n', x: 0, y: -hh }, { id: 'ne', x: hw, y: -hh },
-      { id: 'e', x: hw, y: 0 }, { id: 'se', x: hw, y: hh }, { id: 's', x: 0, y: hh },
-      { id: 'sw', x: -hw, y: hh }, { id: 'w', x: -hw, y: 0 }
-    ];
-  }
-
-  function toSbLocal(layer, cx, cy) {
-    const dx = cx - layer.x, dy = cy - layer.y;
-    const rad = -((layer.rotation || 0) * Math.PI) / 180;
-    return { x: dx * Math.cos(rad) - dy * Math.sin(rad), y: dx * Math.sin(rad) + dy * Math.cos(rad) };
-  }
-
-  function drawSpeechBubbleLayer(layer) {
-    const bw = layer.bw || 460, bh = layer.bh || 240;
-    const style = layer.sbStyle || 'round', tail = layer.sbTail || 'bottom-left';
-    const fill = layer.fillColor || '#ffffff', stroke = layer.strokeColor || '#000000';
-    const lineWidth = layer.lineWidth !== undefined ? layer.lineWidth : 8;
-    const bx = -bw / 2, by = -bh / 2;
-
-    ctx.save();
-    ctx.globalAlpha = layer.opacity !== undefined ? Math.max(0, Math.min(1, layer.opacity / 100)) : 1.0;
-    ctx.translate(layer.x, layer.y);
-    ctx.rotate(((layer.rotation || 0) * Math.PI) / 180);
-
-    if (layer.hasShadow !== false) {
-      ctx.shadowColor = 'rgba(0,0,0,0.45)';
-      ctx.shadowBlur = 16; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 7;
-    }
-
-    ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth;
-    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-
-    const r = style === 'round' ? Math.min(36, bw * 0.15, bh * 0.2) : 0;
-    const tw = Math.min(44, bw * 0.16), th = Math.min(56, Math.max(28, bh * 0.24));
-    const offsetSide = Math.max(r + 12, bw * 0.14);
-
-    if (style === 'spike') {
-      const spikes = 22, rx = bw / 2, ry = bh / 2;
-      ctx.beginPath();
-      for (let i = 0; i < spikes * 2; i++) {
-        const angle = (i * Math.PI) / spikes;
-        const isOuter = i % 2 === 0;
-        const rScale = isOuter ? 1.08 : 0.80;
-        let extra = 1.0;
-        if (isOuter && tail !== 'none') {
-          const deg = ((angle * 180) / Math.PI + 360) % 360;
-          if (tail === 'bottom-right' && deg > 30 && deg < 65) extra = 1.32;
-          if (tail === 'bottom-center' && deg > 75 && deg < 105) extra = 1.32;
-          if (tail === 'bottom-left' && deg > 115 && deg < 150) extra = 1.32;
-          if (tail === 'left' && deg > 165 && deg < 195) extra = 1.32;
-          if (tail === 'top-left' && deg > 210 && deg < 245) extra = 1.32;
-          if (tail === 'top-center' && deg > 255 && deg < 285) extra = 1.32;
-          if (tail === 'top-right' && deg > 295 && deg < 330) extra = 1.32;
-          if (tail === 'right' && (deg > 345 || deg < 15)) extra = 1.32;
-        }
-        const px = Math.cos(angle) * rx * rScale * extra;
-        const py = Math.sin(angle) * ry * rScale * extra;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.closePath(); ctx.fill(); if (lineWidth > 0) ctx.stroke();
-    } else if (style === 'cloud') {
-      const pad = 160, offW = Math.ceil(bw + pad * 2), offH = Math.ceil(bh + pad * 2);
-      const off = document.createElement('canvas'); off.width = offW; off.height = offH;
-      const octx = off.getContext('2d'), ocx = offW / 2, ocy = offH / 2;
-      const bumps = 14, rx = Math.max(20, bw / 2 - 20), ry = Math.max(15, bh / 2 - 20);
-      const bumpR = Math.max(22, Math.min(rx, ry) * 0.48);
-      if (lineWidth > 0) {
-        octx.fillStyle = stroke;
-        for (let i = 0; i < bumps; i++) {
-          const a = (i / bumps) * Math.PI * 2;
-          octx.beginPath(); octx.arc(ocx + Math.cos(a) * rx, ocy + Math.sin(a) * ry, bumpR + lineWidth, 0, Math.PI * 2); octx.fill();
-        }
-        octx.beginPath(); octx.ellipse(ocx, ocy, rx + lineWidth, ry + lineWidth, 0, 0, Math.PI * 2); octx.fill();
-      }
-      octx.fillStyle = fill;
-      for (let i = 0; i < bumps; i++) {
-        const a = (i / bumps) * Math.PI * 2;
-        octx.beginPath(); octx.arc(ocx + Math.cos(a) * rx, ocy + Math.sin(a) * ry, bumpR, 0, Math.PI * 2); octx.fill();
-      }
-      octx.beginPath(); octx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2); octx.fill();
-      if (tail !== 'none') {
-        const dxMap = { 'bottom-left': -bw * 0.25, 'bottom-center': 0, 'bottom-right': bw * 0.25, 'top-left': -bw * 0.25, 'top-center': 0, 'top-right': bw * 0.25, 'left': -(bw / 2 + 32), 'right': bw / 2 + 32 };
-        const dyMap = { 'bottom-left': bh / 2 + 32, 'bottom-center': bh / 2 + 36, 'bottom-right': bh / 2 + 32, 'top-left': -(bh / 2 + 32), 'top-center': -(bh / 2 + 36), 'top-right': -(bh / 2 + 32), 'left': 0, 'right': 0 };
-        const dx = dxMap[tail] || 0, dy = dyMap[tail] || (bh / 2 + 36);
-        [{ t: 1.0, r: 16 }, { t: 1.25, r: 10 }].forEach(d => {
-          const tx = ocx + dx * d.t, ty = ocy + dy * d.t;
-          if (lineWidth > 0) { octx.fillStyle = stroke; octx.beginPath(); octx.arc(tx, ty, d.r + lineWidth, 0, Math.PI * 2); octx.fill(); }
-          octx.fillStyle = fill; octx.beginPath(); octx.arc(tx, ty, d.r, 0, Math.PI * 2); octx.fill();
-        });
-      }
-      ctx.drawImage(off, -offW / 2, -offH / 2);
-    } else if (style === 'oval') {
-      const pad = 120, offW = Math.ceil(bw + pad * 2), offH = Math.ceil(bh + pad * 2);
-      const off = document.createElement('canvas'); off.width = offW; off.height = offH;
-      const octx = off.getContext('2d'); octx.lineJoin = 'round';
-      const ocx = offW / 2, ocy = offH / 2, rx = bw / 2, ry = bh / 2, th = Math.min(55, Math.max(28, bh * 0.25));
-      const drawOvalPass = (isStroke) => {
-        octx.fillStyle = isStroke ? stroke : fill; octx.strokeStyle = stroke; octx.lineWidth = isStroke ? lineWidth * 2 : 0;
-        if (tail !== 'none') {
-          const tailMap = {
-            'bottom-left': [[ocx - rx * 0.45, ocy + ry * 0.6], [ocx - rx * 0.15, ocy + ry * 0.75], [ocx - rx * 0.6, ocy + ry + th]],
-            'bottom-center': [[ocx - rx * 0.18, ocy + ry * 0.75], [ocx + rx * 0.18, ocy + ry * 0.75], [ocx, ocy + ry + th]],
-            'bottom-right': [[ocx + rx * 0.15, ocy + ry * 0.75], [ocx + rx * 0.45, ocy + ry * 0.6], [ocx + rx * 0.6, ocy + ry + th]],
-            'top-left': [[ocx - rx * 0.45, ocy - ry * 0.6], [ocx - rx * 0.15, ocy - ry * 0.75], [ocx - rx * 0.6, ocy - ry - th]],
-            'top-center': [[ocx - rx * 0.18, ocy - ry * 0.75], [ocx + rx * 0.18, ocy - ry * 0.75], [ocx, ocy - ry - th]],
-            'top-right': [[ocx + rx * 0.15, ocy - ry * 0.75], [ocx + rx * 0.45, ocy - ry * 0.6], [ocx + rx * 0.6, ocy - ry - th]],
-            'left': [[ocx - rx * 0.75, ocy - ry * 0.22], [ocx - rx * 0.75, ocy + ry * 0.22], [ocx - rx - th, ocy]],
-            'right': [[ocx + rx * 0.75, ocy - ry * 0.22], [ocx + rx * 0.75, ocy + ry * 0.22], [ocx + rx + th, ocy]]
-          };
-          const pts = tailMap[tail];
-          if (pts) { octx.beginPath(); octx.moveTo(pts[0][0], pts[0][1]); octx.lineTo(pts[2][0], pts[2][1]); octx.lineTo(pts[1][0], pts[1][1]); octx.closePath(); if (isStroke) octx.stroke(); octx.fill(); }
-        }
-        octx.beginPath(); octx.ellipse(ocx, ocy, rx, ry, 0, 0, Math.PI * 2); if (isStroke) octx.stroke(); octx.fill();
-      };
-      if (lineWidth > 0) drawOvalPass(true);
-      drawOvalPass(false);
-      ctx.drawImage(off, -offW / 2, -offH / 2);
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(bx + r, by);
-      if (tail === 'top-left') { ctx.lineTo(bx + offsetSide, by); ctx.lineTo(bx + offsetSide - 10, by - th); ctx.lineTo(bx + offsetSide + tw, by); }
-      else if (tail === 'top-center') { ctx.lineTo(-tw / 2, by); ctx.lineTo(0, by - th); ctx.lineTo(tw / 2, by); }
-      else if (tail === 'top-right') { ctx.lineTo(bx + bw - offsetSide - tw, by); ctx.lineTo(bx + bw - offsetSide + 10, by - th); ctx.lineTo(bx + bw - offsetSide, by); }
-      ctx.lineTo(bx + bw - r, by);
-      if (r > 0) ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
-      if (tail === 'right') { ctx.lineTo(bx + bw, -tw / 2); ctx.lineTo(bx + bw + th, 0); ctx.lineTo(bx + bw, tw / 2); }
-      ctx.lineTo(bx + bw, by + bh - r);
-      if (r > 0) ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh);
-      if (tail === 'bottom-right') { ctx.lineTo(bx + bw - offsetSide, by + bh); ctx.lineTo(bx + bw - offsetSide + 10, by + bh + th); ctx.lineTo(bx + bw - offsetSide - tw, by + bh); }
-      else if (tail === 'bottom-center') { ctx.lineTo(tw / 2, by + bh); ctx.lineTo(0, by + bh + th); ctx.lineTo(-tw / 2, by + bh); }
-      else if (tail === 'bottom-left') { ctx.lineTo(bx + offsetSide + tw, by + bh); ctx.lineTo(bx + offsetSide - 10, by + bh + th); ctx.lineTo(bx + offsetSide, by + bh); }
-      ctx.lineTo(bx + r, by + bh);
-      if (r > 0) ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - r);
-      if (tail === 'left') { ctx.lineTo(bx, tw / 2); ctx.lineTo(bx - th, 0); ctx.lineTo(bx, -tw / 2); }
-      ctx.lineTo(bx, by + r);
-      if (r > 0) ctx.quadraticCurveTo(bx, by, bx + r, by);
-      ctx.closePath(); ctx.fill(); if (lineWidth > 0) ctx.stroke();
-    }
-
-    if (activeLayer && activeLayer.id === layer.id) {
-      ctx.shadowColor = 'transparent'; ctx.globalAlpha = 1.0;
-      ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-      ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
-      getSbHandles(bw, bh).forEach(h => {
-        ctx.beginPath(); ctx.arc(h.x, h.y, 9, 0, Math.PI * 2);
-        ctx.fillStyle = '#10b981'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
-      });
-    }
-    ctx.restore();
-  }
-
-  if (!window.__speechBubbleHooked) {
-    window.__speechBubbleHooked = true;
-    const origRender = window.render;
-    window.render = function() {
-      origRender.apply(this, arguments);
-      layers.forEach(l => { if (l.type === 'speechBubble') drawSpeechBubbleLayer(l); });
-    };
-    const origSelect = window.selectLayer;
-    window.selectLayer = function(layer) {
-      origSelect.apply(this, arguments);
-      const panel = document.getElementById('speechBubbleInspector');
-      if (!panel) return;
-      if (layer && layer.type === 'speechBubble') {
-        document.getElementById('inspectorTitle').innerText = '💬 吹き出しプロパティ (●変形)';
-        panel.classList.remove('hidden');
-        document.getElementById('sbStyle').value = layer.sbStyle || 'round';
-        document.getElementById('sbTail').value = layer.sbTail || 'bottom-left';
-        document.getElementById('sbW').value = layer.bw || 460;
-        document.getElementById('sbWVal').innerText = layer.bw || 460;
-        document.getElementById('sbH').value = layer.bh || 240;
-        document.getElementById('sbHVal').innerText = layer.bh || 240;
-        document.getElementById('sbFill').value = layer.fillColor || '#ffffff';
-        document.getElementById('sbStroke').value = layer.strokeColor || '#000000';
-        document.getElementById('sbLine').value = layer.lineWidth !== undefined ? layer.lineWidth : 8;
-        document.getElementById('sbLineVal').innerText = layer.lineWidth !== undefined ? layer.lineWidth : 8;
-        document.getElementById('sbShadow').checked = layer.hasShadow !== false;
-      } else { panel.classList.add('hidden'); }
-    };
-
-    const mainCvs = document.getElementById('mainCanvas');
-    if (mainCvs) {
-      let dragHandle = null, dragStart = null;
-      const getPos = (e) => {
-        const rect = mainCvs.getBoundingClientRect();
-        return { x: (e.clientX - rect.left) * (mainCvs.width / rect.width), y: (e.clientY - rect.top) * (mainCvs.height / rect.height) };
-      };
-      mainCvs.addEventListener('mousedown', (e) => {
-        const pos = getPos(e);
-        if (activeLayer && activeLayer.type === 'speechBubble') {
-          const loc = toSbLocal(activeLayer, pos.x, pos.y);
-          for (const h of getSbHandles(activeLayer.bw || 460, activeLayer.bh || 240)) {
-            if (Math.hypot(loc.x - h.x, loc.y - h.y) <= 18) {
-              dragHandle = h.id;
-              dragStart = { x: pos.x, y: pos.y, bw: activeLayer.bw || 460, bh: activeLayer.bh || 240 };
-              e.stopImmediatePropagation(); e.preventDefault(); return;
-            }
-          }
-        }
-        for (let i = layers.length - 1; i >= 0; i--) {
-          const l = layers[i];
-          if (l.type === 'speechBubble') {
-            const loc = toSbLocal(l, pos.x, pos.y);
-            if (Math.abs(loc.x) <= (l.bw || 460) / 2 && Math.abs(loc.y) <= (l.bh || 240) / 2) { selectLayer(l); break; }
-          }
-        }
-      }, true);
-      window.addEventListener('mousemove', (e) => {
-        if (!dragHandle || !dragStart || !activeLayer || activeLayer.type !== 'speechBubble') return;
-        const pos = getPos(e);
-        const rad = -((activeLayer.rotation || 0) * Math.PI) / 180;
-        const dxRaw = pos.x - dragStart.x, dyRaw = pos.y - dragStart.y;
-        const dx = dxRaw * Math.cos(rad) - dyRaw * Math.sin(rad);
-        const dy = dxRaw * Math.sin(rad) + dyRaw * Math.cos(rad);
-        let newW = dragStart.bw, newH = dragStart.bh;
-        if (dragHandle.includes('e')) newW = Math.max(80, Math.round(dragStart.bw + dx * 2));
-        if (dragHandle.includes('w')) newW = Math.max(80, Math.round(dragStart.bw - dx * 2));
-        if (dragHandle.includes('s')) newH = Math.max(50, Math.round(dragStart.bh + dy * 2));
-        if (dragHandle.includes('n')) newH = Math.max(50, Math.round(dragStart.bh - dy * 2));
-        activeLayer.bw = newW; activeLayer.bh = newH;
-        const wInput = document.getElementById('sbW'), hInput = document.getElementById('sbH');
-        if (wInput) { wInput.value = newW; document.getElementById('sbWVal').innerText = newW; }
-        if (hInput) { hInput.value = newH; document.getElementById('sbHVal').innerText = newH; }
-        render();
-      });
-      window.addEventListener('mouseup', () => { dragHandle = null; dragStart = null; });
-    }
-
-    document.getElementById('sbStyle').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.sbStyle = e.target.value; render(); } };
-    document.getElementById('sbTail').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.sbTail = e.target.value; render(); } };
-    document.getElementById('sbW').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.bw = +e.target.value; document.getElementById('sbWVal').innerText = activeLayer.bw; render(); } };
-    document.getElementById('sbH').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.bh = +e.target.value; document.getElementById('sbHVal').innerText = activeLayer.bh; render(); } };
-    document.getElementById('sbFill').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.fillColor = e.target.value; render(); } };
-    document.getElementById('sbStroke').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.strokeColor = e.target.value; render(); } };
-    document.getElementById('sbLine').oninput = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.lineWidth = +e.target.value; document.getElementById('sbLineVal').innerText = activeLayer.lineWidth; render(); } };
-    document.getElementById('sbShadow').onchange = e => { if (activeLayer?.type === 'speechBubble') { activeLayer.hasShadow = e.target.checked; render(); } };
-  }
-
-  onShmlAction('add_speech_bubble', () => {
-    const count = layers.filter(l => l.type === 'speechBubble').length + 1;
-    const layer = {
-      id: Date.now(), type: 'speechBubble', name: \`💬 吹き出し (\${count})\`,
-      x: 640, y: 360, bw: 460, bh: 240, rotation: 0, opacity: 100,
-      sbStyle: 'round', sbTail: 'bottom-left', fillColor: '#ffffff', strokeColor: '#000000', lineWidth: 8, hasShadow: true
-    };
-    layers.push(layer); selectLayer(layer);
-  });
-})();
-__`
-            },
-            {
-                title: '⚡ 集中線エフェクト',
-                author: 'YuJitsu Dev',
-                description: 'サムネイルに迫力を出すマンガ風「集中線」レイヤーを追加できる公式プラグインです。\n\n【主な機能】\n・集中線の色、線の太さ、本数（密度）、中心の余白サイズをスライダーでリアルタイム調整\n・中心のオレンジターゲットをドラッグして、注目させたいキャラや文字に中心点を自由に移動可能\n・レイヤーの「上へ・下へ」ボタンで背景と文字の間に挟むこともできます！',
-                file_name: 'shuuchuusenn.shml',
-                tags: ['[change]', '[html]', '[javascript]'],
-                downloads: 0,
-                created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-                code: `[change]
-# レイヤー追加パネルに「⚡ 集中線を追加」ボタンを追加
-(+"59")-("⚡ 集中線を追加","{button}")-{button}:<add_focus_lines>
-_
-[html]
-("1~40"):{
-<div id="focusLineInspector" class="space-y-2 bg-[#161b22] p-2.5 rounded border border-amber-500/60 mt-2 hidden">
-  <div class="flex justify-between items-center border-b border-amber-500/30 pb-1">
-    <span class="text-[11px] font-bold text-amber-300">⚡ 集中線プロパティ (中心ドラッグで移動)</span>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <div>
-      <span class="text-[10px] text-gray-400">集中線の色</span>
-      <input type="color" id="flColor" value="#ffffff" class="w-full h-6 rounded cursor-pointer">
-    </div>
-    <div>
-      <span class="text-[10px] text-gray-400">太さ <span id="flThicknessVal" class="text-amber-300 font-bold">8</span></span>
-      <input type="range" id="flThickness" min="1" max="30" value="8" class="w-full">
-    </div>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <div>
-      <span class="text-[10px] text-gray-400">密度(本数) <span id="flDensityVal" class="text-amber-300 font-bold">80</span>本</span>
-      <input type="range" id="flDensity" min="20" max="200" value="80" class="w-full">
-    </div>
-    <div>
-      <span class="text-[10px] text-gray-400">長さ(余白) <span id="flLengthVal" class="text-amber-300 font-bold">260</span></span>
-      <input type="range" id="flLength" min="80" max="580" value="260" class="w-full">
-    </div>
-  </div>
-</div>
-}
-_
-[javascript]
-:
-(() => {
-  const inspectorPanel = document.getElementById('inspectorPanel');
-  const flInspector = document.getElementById('focusLineInspector');
-  if (inspectorPanel && flInspector) inspectorPanel.appendChild(flInspector);
-
-  if (!window.__focusLinesHooked) {
-    window.__focusLinesHooked = true;
-    const origRender = window.render;
-    window.render = function() {
-      origRender.apply(this, arguments);
-      layers.forEach((layer) => {
-        if (layer.type !== 'focusLines') return;
-        ctx.save();
-        ctx.globalAlpha = layer.opacity !== undefined ? Math.max(0, Math.min(1, layer.opacity / 100)) : 1.0;
-        ctx.translate(layer.x, layer.y);
-        ctx.rotate(((layer.rotation || 0) * Math.PI) / 180);
-        const count = layer.density || 80;
-        const innerRadius = layer.innerRadius || 260;
-        const outerRadius = 1500;
-        const baseWidth = (layer.thickness || 8) * 0.0045;
-        ctx.fillStyle = layer.color || '#ffffff';
-
-        for (let i = 0; i < count; i++) {
-          const seed1 = Math.sin(i * 12.9898 + layer.id * 0.001) * 43758.5453;
-          const rand1 = seed1 - Math.floor(seed1);
-          const seed2 = Math.sin(i * 78.233 + layer.id * 0.002) * 24634.6345;
-          const rand2 = seed2 - Math.floor(seed2);
-          const angle = (i / count) * Math.PI * 2 + (rand1 - 0.5) * (Math.PI / count);
-          const rStart = innerRadius * (0.78 + rand2 * 0.45);
-          const spread = baseWidth * (0.5 + rand1 * 1.1);
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(angle) * rStart, Math.sin(angle) * rStart);
-          ctx.lineTo(Math.cos(angle - spread) * outerRadius, Math.sin(angle - spread) * outerRadius);
-          ctx.lineTo(Math.cos(angle + spread) * outerRadius, Math.sin(angle + spread) * outerRadius);
-          ctx.closePath(); ctx.fill();
-        }
-        ctx.restore();
-      });
-    };
-
-    const origSelectLayer = window.selectLayer;
-    window.selectLayer = function(layer) {
-      origSelectLayer.apply(this, arguments);
-      const panel = document.getElementById('focusLineInspector');
-      if (!panel) return;
-      if (layer && layer.type === 'focusLines') {
-        document.getElementById('inspectorTitle').innerText = '⚡ 集中線プロパティ';
-        panel.classList.remove('hidden');
-      } else { panel.classList.add('hidden'); }
-    };
-
-    document.getElementById('flColor').oninput = (e) => { if (activeLayer?.type === 'focusLines') { activeLayer.color = e.target.value; render(); } };
-    document.getElementById('flThickness').oninput = (e) => { if (activeLayer?.type === 'focusLines') { activeLayer.thickness = parseInt(e.target.value, 10); document.getElementById('flThicknessVal').innerText = activeLayer.thickness; render(); } };
-    document.getElementById('flDensity').oninput = (e) => { if (activeLayer?.type === 'focusLines') { activeLayer.density = parseInt(e.target.value, 10); document.getElementById('flDensityVal').innerText = activeLayer.density; render(); } };
-    document.getElementById('flLength').oninput = (e) => { if (activeLayer?.type === 'focusLines') { const val = parseInt(e.target.value, 10); document.getElementById('flLengthVal').innerText = val; activeLayer.innerRadius = 660 - val; render(); } };
-  }
-
-  onShmlAction('add_focus_lines', () => {
-    const count = layers.filter(l => l.type === 'focusLines').length + 1;
-    const layer = { id: Date.now(), type: 'focusLines', name: \`⚡ 集中線 (\${count})\`, x: 640, y: 360, rotation: 0, opacity: 100, color: '#ffffff', thickness: 8, density: 80, innerRadius: 260 };
-    layers.push(layer); selectLayer(layer);
-  });
-})();
-__`
-            },
-            {
-                title: '↔️ レイヤー左右・上下反転',
-                author: 'YuJitsu Dev',
-                description: '選択中のテキストレイヤーやサブ画像レイヤーをワンクリックで「↔️ 左右反転」「↕️ 上下反転」できる軽量ユーティリティプラグインです。\n\n立ち絵イラストの向きを変えたい時や、鏡文字エフェクトを作りたい時に超便利です！',
-                file_name: 'hanntenn.shml',
-                tags: ['[html]', '[javascript]'],
-                downloads: 0,
-                created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-                code: `[html]
-("1~20"):{
-<div id="shmlFlipControls" class="grid grid-cols-2 gap-1.5 mt-1.5 hidden">
-  <button id="shmlBtnFlipH" class="btn-toggle font-bold">↔️ 左右反転</button>
-  <button id="shmlBtnFlipV" class="btn-toggle font-bold">↕️ 上下反転</button>
-</div>
-}
-_
-[javascript]
-:
-(() => {
-  const inspectorPanel = document.getElementById('inspectorPanel');
-  const flipBox = document.getElementById('shmlFlipControls');
-  const rotInput = document.getElementById('layerRotation');
-  if (inspectorPanel && flipBox && rotInput) {
-    const rotGrid = rotInput.closest('.grid');
-    if (rotGrid) inspectorPanel.insertBefore(flipBox, rotGrid);
-    else inspectorPanel.appendChild(flipBox);
-  }
-
-  if (!window.__shmlFlipHooked) {
-    window.__shmlFlipHooked = true;
-    const origSelectLayer = window.selectLayer;
-    window.selectLayer = function(layer) {
-      origSelectLayer.apply(this, arguments);
-      const box = document.getElementById('shmlFlipControls');
-      if (!box) return;
-      if (layer && (layer.type === 'text' || layer.type === 'image')) {
-        box.classList.remove('hidden');
-        document.getElementById('shmlBtnFlipH').classList.toggle('active', !!layer.flipH);
-        document.getElementById('shmlBtnFlipV').classList.toggle('active', !!layer.flipV);
-      } else { box.classList.add('hidden'); }
-    };
-
-    document.getElementById('shmlBtnFlipH').onclick = () => {
-      if (!activeLayer || (activeLayer.type !== 'text' && activeLayer.type !== 'image')) return;
-      activeLayer.flipH = !activeLayer.flipH;
-      document.getElementById('shmlBtnFlipH').classList.toggle('active', activeLayer.flipH);
-      render();
-    };
-
-    document.getElementById('shmlBtnFlipV').onclick = () => {
-      if (!activeLayer || (activeLayer.type !== 'text' && activeLayer.type !== 'image')) return;
-      activeLayer.flipV = !activeLayer.flipV;
-      document.getElementById('shmlBtnFlipV').classList.toggle('active', activeLayer.flipV);
-      render();
-    };
-
-    const origRender = window.render;
-    window.render = function() {
-      let currentDrawingLayer = null;
-      const origTranslate = ctx.translate.bind(ctx);
-      const origRotate = ctx.rotate.bind(ctx);
-      ctx.translate = function(x, y) {
-        currentDrawingLayer = layers.find(l => l.x === x && l.y === y) || null;
-        return origTranslate(x, y);
-      };
-      ctx.rotate = function(rad) {
-        const res = origRotate(rad);
-        if (currentDrawingLayer && (currentDrawingLayer.type === 'image' || currentDrawingLayer.type === 'text')) {
-          if (currentDrawingLayer.flipH || currentDrawingLayer.flipV) {
-            ctx.scale(currentDrawingLayer.flipH ? -1 : 1, currentDrawingLayer.flipV ? -1 : 1);
-          }
-        }
-        return res;
-      };
-      try { origRender.apply(this, arguments); }
-      finally { ctx.translate = origTranslate; ctx.rotate = origRotate; }
-    };
-  }
-})();
-__`
-            }
-        ];
-
-        // アプリ状態
-        let supabaseClient = null;
-        let realtimeChannel = null;
-        let pollingTimer = null;
-        let allPlugins = [];
-        let currentSort = 'newest';
-        let activeBlockFilter = 'all';
-        let searchQuery = '';
-        let selectedPlugin = null;
-        let uploadedFileObj = null;
-
-        // DOM要素
-        const pluginGrid = document.getElementById('pluginGrid');
-        const loadingState = document.getElementById('loadingState');
-        const emptyState = document.getElementById('emptyState');
-        const pluginCountLabel = document.getElementById('pluginCountLabel');
-        const searchInput = document.getElementById('searchInput');
-        const clearSearchBtn = document.getElementById('clearSearchBtn');
-        const sortNewestBtn = document.getElementById('sortNewestBtn');
-        function setConnectionStatus(online, text) {
-            const dot = document.getElementById('statusDot');
-            const label = document.getElementById('statusText');
-            dot.className = `w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
-            label.textContent = text;
-        }
-
         function getPluginTags(plugin) {
             if (Array.isArray(plugin.tags) && plugin.tags.length > 0) return plugin.tags;
-            if (Array.isArray(plugin.blocks) && plugin.blocks.length > 0) return plugin.blocks;
-            return detectShmlBlocks(plugin.code || '');
+            return extractShmlTags(plugin.code || "");
         }
 
-        function formatDate(isoStr) {
-            if (!isoStr) return '不明';
-            const d = new Date(isoStr);
-            if (isNaN(d.getTime())) return '不明';
+        function getTagStyle(tag) {
+            switch (tag) {
+                case "[change]": return "bg-purple-500/15 text-purple-300 border-purple-500/35";
+                case "[html]": return "bg-rose-500/15 text-rose-300 border-rose-500/35";
+                case "[javascript]": return "bg-amber-500/15 text-amber-300 border-amber-500/35";
+                case "[css]": return "bg-cyan-500/15 text-cyan-300 border-cyan-500/35";
+                case "[style]": return "bg-indigo-500/15 text-indigo-300 border-indigo-500/35";
+                default: return "bg-slate-700/40 text-slate-300 border-slate-600/50";
+            }
+        }
+
+        function formatDateTime(iso) {
+            if (!iso) return "日時不明";
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return "日時不明";
             const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            const hh = String(d.getHours()).padStart(2, '0');
-            const mm = String(d.getMinutes()).padStart(2, '0');
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mm = String(d.getMinutes()).padStart(2, "0");
             return `${y}/${m}/${day} ${hh}:${mm}`;
         }
 
-        // ローカルストレージ保存・読込（DB未設定時フォールバック）
-        function loadLocalPlugins() {
-            try {
-                const raw = localStorage.getItem(LOCAL_PLUGINS_STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                }
-            } catch (e) {}
-            const seeded = INITIAL_SEED_PLUGINS.map((p, i) => ({ id: 'local-' + (i + 1), ...p }));
-            saveLocalPlugins(seeded);
-            return seeded;
+        function highlightShmlCode(rawCode) {
+            return escapeHtml(rawCode || "")
+                .replace(/^(\s*\[(?:change|html|javascript|js|css|style|python|java|php)\]|_+)/gim, '<span class="shml-directive">$1</span>')
+                .replace(/^(\s*#.*)$/gm, '<span class="shml-comment">$1</span>');
         }
 
-        function saveLocalPlugins(list) {
-            try {
-                localStorage.setItem(LOCAL_PLUGINS_STORAGE_KEY, JSON.stringify(list));
-            } catch (e) {}
+        function updateConnectionBadge(isOnline, label) {
+            const dot = document.getElementById("statusDot");
+            const text = document.getElementById("statusText");
+            dot.className = `w-2.5 h-2.5 rounded-full ${isOnline ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`;
+            text.textContent = label;
         }
 
-        // 一覧描画
-        function renderPluginGrid() {
+        // =========================================================================
+        // 4. 作成者フィルタ同期 ＆ レンダリング
+        // =========================================================================
+        function syncAuthorDropdown() {
+            const select = document.getElementById("authorSelect");
+            const uniqueAuthors = Array.from(
+                new Set(plugins.map(p => (p.author || "匿名クリエイター").trim()).filter(Boolean))
+            ).sort((a, b) => a.localeCompare(b, "ja"));
+
+            const prev = selectedAuthor;
+            select.innerHTML = `<option value="all">👤 すべての作成者 (${uniqueAuthors.length})</option>`;
+            uniqueAuthors.forEach(author => {
+                const opt = document.createElement("option");
+                opt.value = author;
+                opt.textContent = `👤 ${author}`;
+                select.appendChild(opt);
+            });
+
+            if (prev !== "all" && uniqueAuthors.includes(prev)) {
+                select.value = prev;
+            } else {
+                selectedAuthor = "all";
+                select.value = "all";
+            }
+
+            const chip = document.getElementById("activeAuthorChip");
+            const chipName = document.getElementById("activeAuthorChipName");
+            if (selectedAuthor !== "all") {
+                chipName.textContent = selectedAuthor;
+                chip.classList.remove("hidden");
+            } else {
+                chip.classList.add("hidden");
+            }
+        }
+
+        function filterByAuthor(authorName) {
+            const clean = (authorName || "匿名クリエイター").trim();
+            selectedAuthor = clean;
+            syncAuthorDropdown();
+            renderPlugins();
+        }
+
+        function renderPlugins() {
+            const grid = document.getElementById("pluginGrid");
+            const loadingBox = document.getElementById("loadingBox");
+            const emptyBox = document.getElementById("emptyBox");
+            const resultCount = document.getElementById("resultCount");
+
+            loadingBox.classList.add("hidden");
+
             const q = searchQuery.trim().toLowerCase();
 
-            let filtered = allPlugins.filter(p => {
-                const blocks = getPluginTags(p);
+            let list = plugins.filter(p => {
+                const tags = getPluginTags(p);
+                const author = (p.author || "匿名クリエイター").trim();
 
-                if (activeBlockFilter !== 'all' && !blocks.includes(activeBlockFilter)) {
-                    return false;
-                }
+                if (selectedTag !== "all" && !tags.includes(selectedTag)) return false;
+                if (selectedAuthor !== "all" && author !== selectedAuthor) return false;
+
                 if (!q) return true;
-                const blocksStr = blocks.join(' ').toLowerCase();
                 return (
-                    (p.title || '').toLowerCase().includes(q) ||
-                    (p.description || '').toLowerCase().includes(q) ||
-                    (p.author || '').toLowerCase().includes(q) ||
-                    (p.file_name || '').toLowerCase().includes(q) ||
-                    blocksStr.includes(q)
+                    (p.title || "").toLowerCase().includes(q) ||
+                    (p.description || "").toLowerCase().includes(q) ||
+                    author.toLowerCase().includes(q) ||
+                    (p.file_name || "").toLowerCase().includes(q) ||
+                    (p.code || "").toLowerCase().includes(q)
                 );
             });
 
-            if (currentSort === 'popular') {
-                filtered.sort((a, b) => (Number(b.downloads) || 0) - (Number(a.downloads) || 0) || new Date(b.created_at) - new Date(a.created_at));
+            // 並べ替え
+            if (currentSort === "likes") {
+                list.sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0) || new Date(b.created_at) - new Date(a.created_at));
+            } else if (currentSort === "downloads") {
+                list.sort((a, b) => (Number(b.downloads) || 0) - (Number(a.downloads) || 0) || new Date(b.created_at) - new Date(a.created_at));
             } else {
-                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             }
 
-            pluginCountLabel.textContent = filtered.length;
-            loadingState.classList.add('hidden');
+            resultCount.textContent = list.length;
 
-            if (filtered.length === 0) {
-                pluginGrid.classList.add('hidden');
-                emptyState.classList.remove('hidden');
+            if (list.length === 0) {
+                grid.classList.add("hidden");
+                emptyBox.classList.remove("hidden");
+
+                const emptyTitle = document.getElementById("emptyTitle");
+                const emptySubtitle = document.getElementById("emptySubtitle");
+                if (plugins.length === 0) {
+                    emptyTitle.textContent = "まだプラグインが投稿されていません";
+                    emptySubtitle.textContent = "最初のクリエイターとして、あなたの自作 .shml プラグインをコミュニティに共有しましょう！";
+                } else {
+                    emptyTitle.textContent = "条件に一致するプラグインが見つかりません";
+                    emptySubtitle.textContent = "検索キーワード・ブロックタグ・作成者フィルタを解除してお試しください。";
+                }
                 return;
             }
 
-            emptyState.classList.add('hidden');
-            pluginGrid.classList.remove('hidden');
-            pluginGrid.innerHTML = '';
+            emptyBox.classList.add("hidden");
+            grid.classList.remove("hidden");
+            grid.innerHTML = "";
 
-            filtered.forEach(plugin => {
-                const blocks = getPluginTags(plugin);
+            list.forEach(plugin => {
+                const tags = getPluginTags(plugin);
+                const isLiked = likedIds.has(String(plugin.id));
+                const likesCount = Number(plugin.likes) || 0;
+                const dlCount = Number(plugin.downloads) || 0;
+                const authorName = (plugin.author || "匿名クリエイター").trim();
 
-                const card = document.createElement('article');
-                card.className = 'plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4 cursor-pointer';
+                const card = document.createElement("article");
+                card.className = "plugin-card rounded-2xl p-5 flex flex-col justify-between gap-4";
 
-                const badgesHtml = blocks.length > 0
-                    ? blocks.map(tag => `<span class="text-[10px] font-mono-code font-semibold px-2 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
-                    : `<span class="text-[10px] font-mono-code px-2 py-0.5 rounded-md border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
+                const tagsHtml = tags.length > 0
+                    ? tags.map(t => `<span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md border ${getTagStyle(t)}">${escapeHtml(t)}</span>`).join("")
+                    : `<span class="text-[10px] font-mono px-2 py-0.5 rounded-md border bg-slate-800/60 text-slate-400 border-slate-700">[shml]</span>`;
 
                 card.innerHTML = `
                     <div class="space-y-3">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="text-[11px] font-mono-code text-gray-400 bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] truncate max-w-[68%]">
-                                📄 ${escapeHtml(plugin.file_name || 'plugin.shml')}
+                        <!-- 上部メタ：ファイル名 ＆ カウントバッジ -->
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-mono text-slate-300 bg-slate-950/90 px-2.5 py-1 rounded-lg border border-slate-800 truncate max-w-[55%]">
+                                📄 ${escapeHtml(plugin.file_name || "plugin.shml")}
                             </span>
-                            <span class="text-xs font-extrabold text-[#58a6ff] bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-lg flex-none">
-                                ⬇️ ${(Number(plugin.downloads) || 0).toLocaleString()}
-                            </span>
+                            <div class="flex items-center gap-1.5 flex-none">
+                                <button type="button" class="card-like-btn inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                    isLiked
+                                        ? "bg-rose-500/20 text-rose-300 border-rose-500/50"
+                                        : "bg-slate-950/90 text-slate-300 border-slate-800 hover:border-rose-500/40"
+                                }" title="いいね！">
+                                    <span>${isLiked ? "❤️" : "🤍"}</span>
+                                    <span>${likesCount.toLocaleString()}</span>
+                                </button>
+                                <span class="inline-flex items-center gap-1 text-xs font-extrabold text-sky-300 bg-sky-500/10 border border-sky-500/30 px-2.5 py-1 rounded-lg" title="ダウンロード数">
+                                    <span>⬇️</span>
+                                    <span>${dlCount.toLocaleString()}</span>
+                                </span>
+                            </div>
                         </div>
 
-                        <div>
+                        <!-- タイトル ＆ 作成者 ＆ 日時 -->
+                        <div class="space-y-1">
                             <h2 class="text-base font-extrabold text-white line-clamp-2 leading-snug">
                                 ${escapeHtml(plugin.title)}
                             </h2>
-                            <p class="text-xs text-gray-400 mt-1.5 line-clamp-3 leading-relaxed">
-                                ${escapeHtml(plugin.description)}
-                            </p>
+                            <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                                <button type="button" class="card-author-btn inline-flex items-center gap-1 text-slate-300 hover:text-sky-300 font-semibold transition cursor-pointer" title="この作成者で絞り込む">
+                                    <span>👤</span>
+                                    <span class="underline decoration-slate-700 hover:decoration-sky-400">${escapeHtml(authorName)}</span>
+                                </button>
+                                <span>•</span>
+                                <span>${formatDateTime(plugin.created_at)}</span>
+                            </div>
                         </div>
 
-                        <div class="flex flex-wrap gap-1.5 pt-1">
-                            ${badgesHtml}
+                        <!-- 概要（3行クランプ） -->
+                        <p class="text-xs text-slate-300/90 line-clamp-3 leading-relaxed min-h-[3.375rem]">
+                            ${escapeHtml(plugin.description || "説明文はありません。")}
+                        </p>
+
+                        <!-- 検出タグ -->
+                        <div class="flex flex-wrap gap-1.5 pt-0.5">
+                            ${tagsHtml}
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-[#30363d] flex items-center justify-between text-[11px] text-gray-400">
-                        <span class="truncate max-w-[55%]">👤 ${escapeHtml(plugin.author || '匿名クリエイター')}</span>
-                        <span>${formatDate(plugin.created_at)}</span>
+                    <!-- クイックアクションボタン -->
+                    <div class="pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2">
+                        <button type="button" class="card-detail-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 text-xs font-bold transition cursor-pointer">
+                            <span>詳細・コード</span>
+                        </button>
+                        <button type="button" class="card-dl-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-400/30 text-xs font-extrabold transition cursor-pointer">
+                            <span>⬇️ DL (.shml)</span>
+                        </button>
                     </div>
                 `;
 
-                card.onclick = () => openDetailModal(plugin);
-                pluginGrid.appendChild(card);
+                // イベントバインド
+                card.querySelector(".card-like-btn").onclick = (e) => {
+                    e.stopPropagation();
+                    toggleLikePlugin(plugin);
+                };
+                card.querySelector(".card-author-btn").onclick = (e) => {
+                    e.stopPropagation();
+                    filterByAuthor(authorName);
+                };
+                card.querySelector(".card-detail-btn").onclick = () => openDetailModal(plugin);
+                card.querySelector(".card-dl-btn").onclick = () => downloadPluginFile(plugin);
+
+                grid.appendChild(card);
             });
         }
 
-        // 詳細モーダル
-        function openDetailModal(plugin) {
-            selectedPlugin = plugin;
-            document.getElementById('detailFileNameBadge').textContent = `📄 ${plugin.file_name || 'plugin.shml'}`;
-            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(plugin.downloads) || 0).toLocaleString()}`;
-            document.getElementById('detailTitle').textContent = plugin.title;
-            document.getElementById('detailAuthor').textContent = plugin.author || '匿名クリエイター';
-            document.getElementById('detailDate').textContent = formatDate(plugin.created_at);
-            document.getElementById('detailDescription').textContent = plugin.description;
-            document.getElementById('detailCodePreview').textContent = plugin.code || '';
+        // =========================================================================
+        // 5. いいね機能（楽観的UI更新 + Supabase RPC）
+        // =========================================================================
+        async function toggleLikePlugin(plugin) {
+            if (!plugin || !plugin.id) return;
+            const idStr = String(plugin.id);
+            const alreadyLiked = likedIds.has(idStr);
+            const currentLikes = Number(plugin.likes) || 0;
 
-            const blocks = getPluginTags(plugin);
-
-            const tagsRow = document.getElementById('detailTagsRow');
-            tagsRow.innerHTML = blocks.length > 0
-                ? blocks.map(tag => `<span class="text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
-                : `<span class="text-[11px] font-mono-code px-2.5 py-0.5 rounded-md border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
-
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-            selectedPlugin = null;
-        }
-
-        // ダウンロード＆DL数カウントアップ（Supabase RPC + 楽観的UI更新）
-        async function handleDownloadPlugin() {
-            if (!selectedPlugin) return;
-            const plugin = selectedPlugin;
-
-            let dlName = (plugin.file_name || 'plugin.shml').trim();
-            if (!dlName.toLowerCase().endsWith('.shml')) {
-                dlName = dlName.replace(/\.[^/.]+$/, '') + '.shml';
+            if (alreadyLiked) {
+                likedIds.delete(idStr);
+                plugin.likes = Math.max(0, currentLikes - 1);
+            } else {
+                likedIds.add(idStr);
+                plugin.likes = currentLikes + 1;
+            }
+            saveLikedIds();
+            renderPlugins();
+            if (activeDetailPlugin && String(activeDetailPlugin.id) === idStr) {
+                syncDetailLikeUI(plugin);
             }
 
-            const blob = new Blob([plugin.code || ''], { type: 'text/plain;charset=utf-8' });
+            if (supabaseClient) {
+                try {
+                    const rpcName = alreadyLiked ? "decrement_shml_likes" : "increment_shml_likes";
+                    const { error } = await supabaseClient.rpc(rpcName, { plugin_id: plugin.id });
+                    if (error) throw error;
+                } catch (err) {
+                    console.error("いいね同期エラー:", err);
+                }
+            }
+        }
+
+        function syncDetailLikeUI(plugin) {
+            const isLiked = likedIds.has(String(plugin.id));
+            const btn = document.getElementById("detailLikeBtn");
+            const heart = document.getElementById("detailLikeHeart");
+            const count = document.getElementById("detailLikeCount");
+
+            heart.textContent = isLiked ? "❤️" : "🤍";
+            count.textContent = (Number(plugin.likes) || 0).toLocaleString();
+            btn.className = isLiked
+                ? "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-extrabold text-xs sm:text-sm transition cursor-pointer bg-rose-500/20 border-rose-500/50 text-rose-200"
+                : "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-extrabold text-xs sm:text-sm transition cursor-pointer bg-slate-900 border-slate-700 text-slate-200 hover:border-rose-500/60";
+        }
+
+        // =========================================================================
+        // 6. ダウンロード処理（.shml 生成 + increment_shml_downloads RPC）
+        // =========================================================================
+        async function downloadPluginFile(plugin) {
+            if (!plugin) return;
+            let fileName = (plugin.file_name || "plugin.shml").trim();
+            if (!fileName.toLowerCase().endsWith(".shml")) {
+                fileName = fileName.replace(/\.[^/.]+$/, "") + ".shml";
+            }
+
+            const blob = new Blob([plugin.code || ""], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            const a = document.createElement("a");
             a.href = url;
-            a.download = dlName;
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showToast(`「${dlName}」をダウンロードしました！`);
+            showToast(`「${fileName}」をダウンロードしました！`);
 
-            const nextCount = (Number(plugin.downloads) || 0) + 1;
-            plugin.downloads = nextCount;
-            document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${nextCount.toLocaleString()}`;
-            renderPluginGrid();
+            // 楽観的UIカウントアップ
+            plugin.downloads = (Number(plugin.downloads) || 0) + 1;
+            renderPlugins();
+            if (activeDetailPlugin && String(activeDetailPlugin.id) === String(plugin.id)) {
+                document.getElementById("detailDownloadBadge").textContent = `⬇️ ${plugin.downloads.toLocaleString()}`;
+            }
 
-            if (supabaseClient && plugin.id && !String(plugin.id).startsWith('local-')) {
+            if (supabaseClient && plugin.id) {
                 try {
-                    const { error: rpcError } = await supabaseClient.rpc('increment_shml_downloads', {
-                        plugin_id: plugin.id
-                    });
-                    if (rpcError) {
-                        const { error: updError } = await supabaseClient
-                            .from('shml_plugins')
-                            .update({ downloads: nextCount })
-                            .eq('id', plugin.id);
-                        if (updError) throw updError;
-                    }
+                    const { error } = await supabaseClient.rpc("increment_shml_downloads", { plugin_id: plugin.id });
+                    if (error) throw error;
                 } catch (err) {
-                    console.error('Supabase DL数更新エラー:', err);
+                    console.error("DL数同期エラー:", err);
                 }
-            } else {
-                saveLocalPlugins(allPlugins);
             }
         }
 
-        // アップロードモーダル
-        const uploadModal = document.getElementById('uploadModal');
-        const shmlUploadInput = document.getElementById('shmlUploadInput');
-        const dropZone = document.getElementById('dropZone');
+        // =========================================================================
+        // 7. 詳細モーダル ＆ パスワード削除機能
+        // =========================================================================
+        function openDetailModal(plugin) {
+            activeDetailPlugin = plugin;
+            const authorName = (plugin.author || "匿名クリエイター").trim();
 
+            document.getElementById("detailFileBadge").textContent = `📄 ${plugin.file_name || "plugin.shml"}`;
+            document.getElementById("detailDownloadBadge").textContent = `⬇️ ${(Number(plugin.downloads) || 0).toLocaleString()}`;
+            document.getElementById("detailTitle").textContent = plugin.title;
+            document.getElementById("detailAuthorText").textContent = authorName;
+            document.getElementById("detailDateText").textContent = formatDateTime(plugin.created_at);
+            document.getElementById("detailDescription").textContent = plugin.description || "説明文はありません。";
+            document.getElementById("detailCodeViewer").innerHTML = highlightShmlCode(plugin.code || "");
+
+            const tags = getPluginTags(plugin);
+            const tagsBox = document.getElementById("detailTagsContainer");
+            tagsBox.innerHTML = tags.length > 0
+                ? tags.map(t => `<span class="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-md border ${getTagStyle(t)}">${escapeHtml(t)}</span>`).join("")
+                : `<span class="text-[11px] font-mono px-2.5 py-0.5 rounded-md border bg-slate-800/60 text-slate-400 border-slate-700">[shml]</span>`;
+
+            syncDetailLikeUI(plugin);
+
+            // 削除UIリセット
+            const hasPassword = Boolean(plugin.delete_pass_hash);
+            const toggleDelBtn = document.getElementById("toggleDeletePromptBtn");
+            const noPassHint = document.getElementById("noPasswordHint");
+            const delPanel = document.getElementById("deletePasswordPanel");
+            const delInput = document.getElementById("deletePasswordInput");
+            const delErr = document.getElementById("deleteErrorText");
+
+            delPanel.classList.add("hidden");
+            delInput.value = "";
+            delErr.classList.add("hidden");
+            delErr.textContent = "";
+
+            if (hasPassword) {
+                toggleDelBtn.disabled = false;
+                toggleDelBtn.classList.remove("opacity-40", "cursor-not-allowed");
+                noPassHint.classList.add("hidden");
+            } else {
+                toggleDelBtn.disabled = true;
+                toggleDelBtn.classList.add("opacity-40", "cursor-not-allowed");
+                noPassHint.classList.remove("hidden");
+            }
+
+            document.getElementById("detailModal").classList.remove("hidden");
+        }
+
+        function closeDetailModal() {
+            document.getElementById("detailModal").classList.add("hidden");
+            activeDetailPlugin = null;
+        }
+
+        document.getElementById("detailAuthorBtn").onclick = () => {
+            if (!activeDetailPlugin) return;
+            const author = activeDetailPlugin.author || "匿名クリエイター";
+            closeDetailModal();
+            filterByAuthor(author);
+        };
+
+        document.getElementById("detailCopyBtn").onclick = () => {
+            if (!activeDetailPlugin) return;
+            copyTextFallback(activeDetailPlugin.code || "", "コードをクリップボードにコピーしました！");
+        };
+
+        document.getElementById("detailLikeBtn").onclick = () => {
+            if (activeDetailPlugin) toggleLikePlugin(activeDetailPlugin);
+        };
+
+        document.getElementById("detailDownloadBtn").onclick = () => {
+            if (activeDetailPlugin) downloadPluginFile(activeDetailPlugin);
+        };
+
+        document.getElementById("toggleDeletePromptBtn").onclick = () => {
+            if (!activeDetailPlugin || !activeDetailPlugin.delete_pass_hash) return;
+            const panel = document.getElementById("deletePasswordPanel");
+            panel.classList.toggle("hidden");
+            if (!panel.classList.contains("hidden")) {
+                document.getElementById("deletePasswordInput").focus();
+            }
+        };
+
+        document.getElementById("confirmDeleteBtn").onclick = async () => {
+            if (!activeDetailPlugin || !supabaseClient) return;
+            const pass = document.getElementById("deletePasswordInput").value;
+            const errEl = document.getElementById("deleteErrorText");
+            const btn = document.getElementById("confirmDeleteBtn");
+
+            if (!pass) {
+                errEl.textContent = "パスワードを入力してください";
+                errEl.classList.remove("hidden");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "確認中...";
+            errEl.classList.add("hidden");
+
+            try {
+                const passHash = await sha256Hex(pass);
+                const { data: deleted, error } = await supabaseClient.rpc("delete_shml_plugin", {
+                    plugin_id: activeDetailPlugin.id,
+                    pass_hash: passHash
+                });
+
+                if (error) throw error;
+
+                if (deleted === true) {
+                    const deletedId = activeDetailPlugin.id;
+                    plugins = plugins.filter(p => p.id !== deletedId);
+                    closeDetailModal();
+                    syncAuthorDropdown();
+                    renderPlugins();
+                    showToast("プラグインを削除しました");
+                } else {
+                    errEl.textContent = "パスワードが一致しません";
+                    errEl.classList.remove("hidden");
+                }
+            } catch (err) {
+                console.error("削除エラー:", err);
+                errEl.textContent = "削除処理中にエラーが発生しました: " + (err.message || "");
+                errEl.classList.remove("hidden");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "削除を実行";
+            }
+        };
+
+        // =========================================================================
+        // 8. 新規アップロードモーダル ＆ 投稿処理
+        // =========================================================================
         function openUploadModal() {
-            uploadedFileObj = null;
-            document.getElementById('uploadForm').reset();
-            document.getElementById('dropZoneDefault').classList.remove('hidden');
-            document.getElementById('dropZoneSelected').classList.add('hidden');
-            document.getElementById('uploadPreviewBox').classList.add('hidden');
-            uploadModal.classList.remove('hidden');
+            document.getElementById("uploadForm").reset();
+            document.getElementById("dropZoneLabel").textContent = "クリックして .shml ファイルを選択、またはここにドラッグ＆ドロップ";
+            document.getElementById("detectedTagsPreview").innerHTML = `<span class="text-[11px] text-slate-500">タグ自動検出待機中...</span>`;
+
+            // 前回の作成者名を復元
+            try {
+                const savedAuthor = localStorage.getItem(SAVED_AUTHOR_KEY);
+                if (savedAuthor) document.getElementById("inputAuthor").value = savedAuthor;
+            } catch (e) {}
+
+            document.getElementById("uploadModal").classList.remove("hidden");
         }
 
         function closeUploadModal() {
-            uploadModal.classList.add('hidden');
+            document.getElementById("uploadModal").classList.add("hidden");
         }
 
-        function processSelectedFile(file) {
+        function updateUploadTagPreview(codeText) {
+            const box = document.getElementById("detectedTagsPreview");
+            const tags = extractShmlTags(codeText);
+            if (tags.length === 0) {
+                box.innerHTML = `<span class="text-[11px] text-slate-500">検出タグなし</span>`;
+            } else {
+                box.innerHTML = tags.map(t => `<span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded border ${getTagStyle(t)}">${escapeHtml(t)}</span>`).join("");
+            }
+        }
+
+        function handleImportedFile(file) {
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
-                const text = ev.target.result || '';
-                if (!text.trim()) {
-                    showToast('空のファイルはアップロードできません', 'error');
-                    return;
+                const content = ev.target.result || "";
+                let cleanName = file.name.trim();
+                if (!cleanName.toLowerCase().endsWith(".shml")) {
+                    cleanName = cleanName.replace(/\.[^/.]+$/, "") + ".shml";
                 }
 
-                let cleanFileName = file.name;
-                if (!cleanFileName.toLowerCase().endsWith('.shml')) {
-                    cleanFileName = cleanFileName.replace(/\.[^/.]+$/, '') + '.shml';
-                }
+                document.getElementById("dropZoneLabel").textContent = `✅ 読込完了: ${cleanName}`;
+                document.getElementById("inputFileName").value = cleanName;
+                document.getElementById("inputCode").value = content;
 
-                uploadedFileObj = {
-                    name: cleanFileName,
-                    code: text,
-                    blocks: detectShmlBlocks(text)
-                };
-
-                document.getElementById('dropZoneDefault').classList.add('hidden');
-                document.getElementById('dropZoneSelected').classList.remove('hidden');
-                document.getElementById('selectedFileName').textContent = `📄 ${cleanFileName}`;
-                document.getElementById('selectedFileMeta').textContent = `${text.split('\n').length} 行 / ${(new Blob([text]).size)} Bytes`;
-
-                const titleInput = document.getElementById('uploadTitle');
+                const titleInput = document.getElementById("inputTitle");
                 if (!titleInput.value.trim()) {
-                    titleInput.value = cleanFileName.replace(/\.shml$/i, '');
+                    titleInput.value = cleanName.replace(/\.shml$/i, "");
                 }
 
-                document.getElementById('uploadDetectedTags').innerHTML = uploadedFileObj.blocks.length > 0
-                    ? uploadedFileObj.blocks.map(tag => `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border ${getTagBadgeStyle(tag)}">${escapeHtml(tag)}</span>`).join('')
-                    : `<span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border bg-gray-500/15 text-gray-400 border-gray-500/30">[shml]</span>`;
-                document.getElementById('uploadCodePreview').textContent = text;
-                document.getElementById('uploadPreviewBox').classList.remove('hidden');
+                updateUploadTagPreview(content);
             };
-            reader.readAsText(file, 'UTF-8');
+            reader.readAsText(file, "UTF-8");
         }
 
-        dropZone.onclick = () => shmlUploadInput.click();
-        shmlUploadInput.onchange = (e) => processSelectedFile(e.target.files[0]);
+        const dropZone = document.getElementById("dropZone");
+        const shmlFileInput = document.getElementById("shmlFileInput");
+
+        dropZone.onclick = () => shmlFileInput.click();
+        shmlFileInput.onchange = (e) => handleImportedFile(e.target.files[0]);
 
         dropZone.ondragover = (e) => {
             e.preventDefault();
-            dropZone.classList.add('border-[#238636]', 'bg-emerald-950/20');
+            dropZone.classList.add("border-emerald-400", "bg-emerald-950/20");
         };
         dropZone.ondragleave = () => {
-            dropZone.classList.remove('border-[#238636]', 'bg-emerald-950/20');
+            dropZone.classList.remove("border-emerald-400", "bg-emerald-950/20");
         };
         dropZone.ondrop = (e) => {
             e.preventDefault();
-            dropZone.classList.remove('border-[#238636]', 'bg-emerald-950/20');
+            dropZone.classList.remove("border-emerald-400", "bg-emerald-950/20");
             if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                processSelectedFile(e.dataTransfer.files[0]);
+                handleImportedFile(e.dataTransfer.files[0]);
             }
         };
 
-        document.getElementById('uploadForm').onsubmit = async (e) => {
+        document.getElementById("inputCode").oninput = (e) => {
+            updateUploadTagPreview(e.target.value);
+        };
+
+        document.getElementById("uploadForm").onsubmit = async (e) => {
             e.preventDefault();
-            if (!uploadedFileObj) {
-                showToast('.shml または .txt ファイルを選択してください', 'error');
+            if (!supabaseClient) {
+                showToast("データベースに接続されていません", "error");
                 return;
             }
 
-            const title = document.getElementById('uploadTitle').value.trim();
-            const author = document.getElementById('uploadAuthor').value.trim() || '匿名クリエイター';
-            const description = document.getElementById('uploadDescription').value.trim();
+            const title = document.getElementById("inputTitle").value.trim();
+            const author = document.getElementById("inputAuthor").value.trim() || "匿名クリエイター";
+            const description = document.getElementById("inputDescription").value.trim();
+            const code = document.getElementById("inputCode").value;
+            const rawPassword = document.getElementById("inputDeletePassword").value;
 
-            if (!title || !description) {
-                showToast('タイトルと概要を入力してください', 'error');
+            if (!title || !code.trim()) {
+                showToast("タイトルと .shml コードは必須です", "error");
                 return;
             }
 
-            const submitBtn = document.getElementById('submitUploadBtn');
+            let fileName = document.getElementById("inputFileName").value.trim();
+            if (!fileName) {
+                const slug = title.replace(/[^\w\u3040-\u30ff\u4e00-\u9faf-]+/g, "_").replace(/^_+|_+$/g, "") || "plugin";
+                fileName = `${slug}.shml`;
+            } else if (!fileName.toLowerCase().endsWith(".shml")) {
+                fileName = fileName.replace(/\.[^/.]+$/, "") + ".shml";
+            }
+
+            const submitBtn = document.getElementById("submitUploadBtn");
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>⏳</span><span>公開中...</span>';
-
-            const payload = {
-                title,
-                author,
-                description,
-                file_name: uploadedFileObj.name,
-                code: uploadedFileObj.code,
-                tags: uploadedFileObj.blocks,
-                downloads: 0
-            };
+            submitBtn.innerHTML = `<span>⏳ 投稿中...</span>`;
 
             try {
-                if (supabaseClient) {
-                    const { data, error } = await supabaseClient
-                        .from('shml_plugins')
-                        .insert([payload])
-                        .select();
-                    if (error) throw error;
-                    if (data && data[0] && !allPlugins.some(p => p.id === data[0].id)) {
-                        allPlugins.unshift(data[0]);
-                        renderPluginGrid();
+                // 作成者名をローカル保存
+                try {
+                    if (document.getElementById("inputAuthor").value.trim()) {
+                        localStorage.setItem(SAVED_AUTHOR_KEY, author);
                     }
+                } catch (e) {}
+
+                const deletePassHash = rawPassword ? await sha256Hex(rawPassword) : null;
+                const tags = extractShmlTags(code);
+
+                const newRecord = {
+                    title,
+                    author,
+                    description,
+                    file_name: fileName,
+                    code,
+                    tags,
+                    downloads: 0,
+                    likes: 0,
+                    delete_pass_hash: deletePassHash
+                };
+
+                const { data, error } = await supabaseClient
+                    .from("shml_plugins")
+                    .insert([newRecord])
+                    .select();
+
+                if (error) throw error;
+
+                if (data && data[0] && !plugins.some(p => p.id === data[0].id)) {
+                    plugins.unshift(data[0]);
                 } else {
-                    const localItem = {
-                        id: 'local-' + Date.now(),
-                        ...payload,
-                        created_at: new Date().toISOString()
-                    };
-                    allPlugins.unshift(localItem);
-                    saveLocalPlugins(allPlugins);
-                    renderPluginGrid();
+                    await fetchPlugins();
                 }
 
+                syncAuthorDropdown();
+                renderPlugins();
                 closeUploadModal();
                 showToast(`「${title}」を公開しました！`);
             } catch (err) {
-                console.error('アップロードエラー:', err);
-                showToast('公開エラー: ' + (err.message || '通信エラーが発生しました'), 'error');
+                console.error("投稿エラー:", err);
+                showToast("投稿に失敗しました: " + (err.message || "通信エラー"), "error");
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>🚀</span><span>コミュニティに公開する</span>';
+                submitBtn.innerHTML = `<span>🚀 コミュニティに公開</span>`;
             }
         };
 
-        // イベントバインド
-        document.getElementById('openUploadModalBtn').onclick = openUploadModal;
-        document.getElementById('closeUploadModalBtn').onclick = closeUploadModal;
-        document.getElementById('cancelUploadBtn').onclick = closeUploadModal;
-        document.getElementById('closeDetailModalBtn').onclick = closeDetailModal;
-        document.getElementById('downloadShmlBtn').onclick = handleDownloadPlugin;
-        document.getElementById('copyCodeBtn').onclick = () => {
-            if (selectedPlugin) copyTextSafe(selectedPlugin.code || '', 'スクリプトコードをコピーしました！');
+        // =========================================================================
+        // 9. コントロールバー各種イベント
+        // =========================================================================
+        document.getElementById("openUploadBtn").onclick = openUploadModal;
+        document.getElementById("emptyUploadBtn").onclick = openUploadModal;
+        document.getElementById("closeUploadBtn").onclick = closeUploadModal;
+        document.getElementById("cancelUploadBtn").onclick = closeUploadModal;
+        document.getElementById("closeDetailBtn").onclick = closeDetailModal;
+
+        document.getElementById("detailModal").onclick = (e) => {
+            if (e.target.id === "detailModal") closeDetailModal();
+        };
+        document.getElementById("uploadModal").onclick = (e) => {
+            if (e.target.id === "uploadModal") closeUploadModal();
         };
 
-        document.getElementById('detailModal').onclick = (e) => { if (e.target.id === 'detailModal') closeDetailModal(); };
-        document.getElementById('uploadModal').onclick = (e) => { if (e.target.id === 'uploadModal') closeUploadModal(); };
-
+        const searchInput = document.getElementById("searchInput");
+        const clearSearchBtn = document.getElementById("clearSearchBtn");
         searchInput.oninput = (e) => {
             searchQuery = e.target.value;
-            clearSearchBtn.classList.toggle('hidden', !searchQuery);
-            renderPluginGrid();
+            clearSearchBtn.classList.toggle("hidden", !searchQuery);
+            renderPlugins();
         };
         clearSearchBtn.onclick = () => {
-            searchQuery = '';
-            searchInput.value = '';
-            clearSearchBtn.classList.add('hidden');
-            renderPluginGrid();
+            searchQuery = "";
+            searchInput.value = "";
+            clearSearchBtn.classList.add("hidden");
+            renderPlugins();
         };
 
-        sortNewestBtn.onclick = () => {
-            currentSort = 'newest';
-            sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer';
-            sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer';
-            renderPluginGrid();
+        document.getElementById("authorSelect").onchange = (e) => {
+            selectedAuthor = e.target.value;
+            syncAuthorDropdown();
+            renderPlugins();
         };
-        sortPopularBtn.onclick = () => {
-            currentSort = 'popular';
-            sortPopularBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#238636] text-white cursor-pointer';
-            sortNewestBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white cursor-pointer';
-            renderPluginGrid();
+        document.getElementById("clearAuthorChipBtn").onclick = () => {
+            selectedAuthor = "all";
+            syncAuthorDropdown();
+            renderPlugins();
         };
 
-        document.querySelectorAll('.block-filter-btn').forEach(btn => {
+        document.querySelectorAll(".sort-btn").forEach(btn => {
             btn.onclick = () => {
-                activeBlockFilter = btn.getAttribute('data-block');
-                document.querySelectorAll('.block-filter-btn').forEach(b => {
-                    const isSelected = b === btn;
-                    if (isSelected) {
-                        b.className = 'block-filter-btn active px-2.5 py-1 rounded-lg text-xs font-bold border transition bg-[#58a6ff] text-[#0d1117] border-[#58a6ff] cursor-pointer';
+                currentSort = btn.getAttribute("data-sort");
+                document.querySelectorAll(".sort-btn").forEach(b => {
+                    const active = b === btn;
+                    b.className = active
+                        ? "sort-btn flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white cursor-pointer"
+                        : "sort-btn flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer";
+                });
+                renderPlugins();
+            };
+        });
+
+        document.querySelectorAll(".tag-pill").forEach(pill => {
+            pill.onclick = () => {
+                selectedTag = pill.getAttribute("data-tag");
+                document.querySelectorAll(".tag-pill").forEach(p => {
+                    const active = p === pill;
+                    const isAll = p.getAttribute("data-tag") === "all";
+                    if (active) {
+                        p.className = `tag-pill px-3 py-1 rounded-lg text-xs ${isAll ? "font-bold" : "font-mono font-bold"} border transition bg-sky-500 text-slate-950 border-sky-400 cursor-pointer`;
                     } else {
-                        const isAll = b.getAttribute('data-block') === 'all';
-                        b.className = `block-filter-btn px-2.5 py-1 rounded-lg text-xs ${isAll ? 'font-bold' : 'font-mono-code font-semibold'} border transition bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-[#58a6ff] cursor-pointer`;
+                        p.className = `tag-pill px-2.5 py-1 rounded-lg text-xs ${isAll ? "font-bold" : "font-mono font-semibold"} border transition bg-slate-950/80 text-slate-300 border-slate-700/80 hover:border-sky-400 cursor-pointer`;
                     }
                 });
-                renderPluginGrid();
+                renderPlugins();
             };
         });
 
         // =========================================================================
-        // Supabase 初期化＆リアルタイム購読
+        // 10. Supabase 初期化・リアルタイム購読・10秒ポーリングフォールバック
         // =========================================================================
-        // Supabase 初期化＆同期（WebSocket制限環境では自動ポーリングへフォールバック）
-        // =========================================================================
-        async function fetchPluginsFromSupabase() {
+        async function fetchPlugins() {
             if (!supabaseClient) return;
             const { data, error } = await supabaseClient
-                .from('shml_plugins')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .from("shml_plugins")
+                .select("*")
+                .order("created_at", { ascending: false });
+
             if (error) throw error;
-            allPlugins = data || [];
-            if (selectedPlugin) {
-                const updated = allPlugins.find(p => p.id === selectedPlugin.id);
+
+            plugins = data || [];
+            syncAuthorDropdown();
+            renderPlugins();
+
+            if (activeDetailPlugin) {
+                const updated = plugins.find(p => String(p.id) === String(activeDetailPlugin.id));
                 if (updated) {
-                    selectedPlugin = updated;
-                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(updated.downloads) || 0).toLocaleString()}`;
+                    activeDetailPlugin = updated;
+                    document.getElementById("detailDownloadBadge").textContent = `⬇️ ${(Number(updated.downloads) || 0).toLocaleString()}`;
+                    syncDetailLikeUI(updated);
                 }
             }
-            renderPluginGrid();
         }
 
-        function startPollingSync() {
-            if (pollingTimer) clearInterval(pollingTimer);
-            pollingTimer = setInterval(async () => {
+        function startPollingFallback() {
+            if (pollingIntervalId) clearInterval(pollingIntervalId);
+            pollingIntervalId = setInterval(async () => {
                 try {
-                    await fetchPluginsFromSupabase();
+                    await fetchPlugins();
                 } catch (e) {
-                    // バックグラウンド更新時のエラーは無視
+                    // バックグラウンド同期エラーは静かに無視
                 }
-            }, 10000);
+            }, 5000);
         }
 
-        async function initSupabaseAndLoad() {
-            if (pollingTimer) {
-                clearInterval(pollingTimer);
-                pollingTimer = null;
+        function isWebSocketAllowed() {
+            try {
+                // Canvas プレビュー環境（about:srcdoc 等）では WebSocket がセキュリティ制限されているため事前判定
+                if (window.location.protocol === "about:" || window.location.href.startsWith("about:srcdoc")) {
+                    return false;
+                }
+                return typeof window.WebSocket === "function";
+            } catch (e) {
+                return false;
             }
-            if (realtimeChannel && supabaseClient) {
-                try { await supabaseClient.removeChannel(realtimeChannel); } catch (e) {}
-                realtimeChannel = null;
-            }
-            supabaseClient = null;
+        }
 
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !window.supabase) {
-                setConnectionStatus(false, '⚠️ オフラインモード');
-                allPlugins = loadLocalPlugins();
-                renderPluginGrid();
-                return;
-            }
+        async function initApp() {
+            lucide.createIcons();
+            loadLikedIds();
+
+            // Canvas サンドボックス内で非同期に発生する WebSocket SecurityError のグローバル出力を抑制
+            window.addEventListener("error", (ev) => {
+                if (ev && ev.message && ev.message.includes("WebSocket") && ev.message.includes("not allowed in Canvas")) {
+                    ev.preventDefault();
+                    startPollingFallback();
+                }
+            });
 
             try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                    realtime: {
+                        params: { eventsPerSecond: 5 }
+                    }
+                });
+                await fetchPlugins();
+                updateConnectionBadge(true, "🌐 オンライン同期中");
 
-                const { data, error } = await supabaseClient
-                    .from('shml_plugins')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                setConnectionStatus(true, '🌐 オンライン同期中');
-
-                // テーブルが完全に空なら公式サンプル3種を downloads: 0 で初期シード（重複実行ガード付き）
-                if ((!data || data.length === 0) && !isSeedingStarterPlugins) {
-                    isSeedingStarterPlugins = true;
+                // GitHub Pages 等 WebSocket 許可環境では Realtime 購読、Canvas プレビュー環境ではポーリング同期を使用
+                if (isWebSocketAllowed()) {
                     try {
-                        const seedRows = INITIAL_SEED_PLUGINS.map(({ created_at, ...rest }) => rest);
-                        const { data: inserted, error: seedErr } = await supabaseClient
-                            .from('shml_plugins')
-                            .insert(seedRows)
-                            .select();
-                        if (!seedErr && inserted) {
-                            allPlugins = inserted;
-                        } else {
-                            allPlugins = [];
-                        }
-                    } finally {
-                        isSeedingStarterPlugins = false;
+                        realtimeChannel = supabaseClient
+                            .channel("public:shml_plugins")
+                            .on("postgres_changes", { event: "*", schema: "public", table: "shml_plugins" }, (payload) => {
+                                if (payload.eventType === "INSERT") {
+                                    if (!plugins.some(p => String(p.id) === String(payload.new.id))) {
+                                        plugins.unshift(payload.new);
+                                    }
+                                } else if (payload.eventType === "UPDATE") {
+                                    const idx = plugins.findIndex(p => String(p.id) === String(payload.new.id));
+                                    if (idx !== -1) plugins[idx] = payload.new;
+                                    if (activeDetailPlugin && String(activeDetailPlugin.id) === String(payload.new.id)) {
+                                        activeDetailPlugin = payload.new;
+                                        document.getElementById("detailDownloadBadge").textContent = `⬇️ ${(Number(payload.new.downloads) || 0).toLocaleString()}`;
+                                        syncDetailLikeUI(payload.new);
+                                    }
+                                } else if (payload.eventType === "DELETE") {
+                                    plugins = plugins.filter(p => String(p.id) !== String(payload.old.id));
+                                    if (activeDetailPlugin && String(activeDetailPlugin.id) === String(payload.old.id)) {
+                                        closeDetailModal();
+                                    }
+                                }
+                                syncAuthorDropdown();
+                                renderPlugins();
+                            })
+                            .subscribe((status) => {
+                                if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+                                    startPollingFallback();
+                                }
+                            });
+                    } catch (wsErr) {
+                        startPollingFallback();
                     }
                 } else {
-                    allPlugins = data || [];
+                    startPollingFallback();
                 }
-
-                renderPluginGrid();
-
-                // Realtime WebSocket 購読（Canvas など WebSocket 禁止環境では自動で定期同期に切替）
-                try {
-                    realtimeChannel = supabaseClient
-                        .channel('shml-hub-realtime')
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'shml_plugins' }, (payload) => {
-                            if (payload.eventType === 'INSERT') {
-                                if (!allPlugins.some(p => p.id === payload.new.id)) {
-                                    allPlugins.unshift(payload.new);
-                                }
-                            } else if (payload.eventType === 'UPDATE') {
-                                const idx = allPlugins.findIndex(p => p.id === payload.new.id);
-                                if (idx !== -1) allPlugins[idx] = payload.new;
-                                if (selectedPlugin && selectedPlugin.id === payload.new.id) {
-                                    selectedPlugin = payload.new;
-                                    document.getElementById('detailDownloadsBadge').textContent = `⬇️ ${(Number(payload.new.downloads) || 0).toLocaleString()}`;
-                                }
-                            } else if (payload.eventType === 'DELETE') {
-                                allPlugins = allPlugins.filter(p => p.id !== payload.old.id);
-                            }
-                            renderPluginGrid();
-                        })
-                        .subscribe((status) => {
-                            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-                                startPollingSync();
-                            }
-                        });
-                } catch (wsErr) {
-                    // Canvas サンドボックス等では WebSocket 不可のため10秒ごとの自動同期へ切替
-                    startPollingSync();
-                }
-
             } catch (err) {
-                console.error('Supabase接続エラー:', err);
-                supabaseClient = null;
-                setConnectionStatus(false, '⚠️ 接続エラー (オフライン表示)');
-                allPlugins = loadLocalPlugins();
-                renderPluginGrid();
+                console.error("Supabase 初期化エラー:", err);
+                updateConnectionBadge(false, "⚠️ 接続エラー");
+                document.getElementById("loadingBox").classList.add("hidden");
+                showToast("データベースへの接続に失敗しました", "error");
             }
         }
 
-        initSupabaseAndLoad();
+        window.addEventListener("DOMContentLoaded", initApp);
     </script>
 </body>
 </html>
